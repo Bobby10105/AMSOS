@@ -1,5 +1,7 @@
 # AMSOS: Audit Management Software Open Source
 
+![AMSOS Dashboard](docs/images/dashboard.png)
+
 AMSOS is a simple, modern, and open-source web application designed for auditors to document audit programs and procedures. It streamlines the audit lifecycle across Planning, Fieldwork, and Reporting phases with built-in sign-off tracking, reviewer collaboration, and professional document export.
 
 ## 🚀 Key Features
@@ -14,6 +16,8 @@ AMSOS is a simple, modern, and open-source web application designed for auditors
 *   **Professional Export**: Generate a complete "Audit Program" in Word (.docx) format with one click.
 *   **Secure Access**: Built-in authentication with granular role-based access control and **Federal SSO (OIDC)** support.
 
+![Audit Details and Sign-offs](docs/images/audit_details.png)
+
 ## 🔐 Roles & Permissions
 
 AMSOS uses a tiered permission model to ensure data integrity and proper audit oversight:
@@ -25,6 +29,8 @@ AMSOS uses a tiered permission model to ensure data integrity and proper audit o
 | **Auditor** | Can document procedures, upload attachments, and sign off as a preparer. |
 | **Specialist** | Can document procedures and sign off, but is **restricted from deleting procedures**. |
 
+![User Management](docs/images/user_management.png)
+
 ## 🛠 Tech Stack
 
 *   **Framework**: [Next.js](https://nextjs.org/) (React)
@@ -32,6 +38,8 @@ AMSOS uses a tiered permission model to ensure data integrity and proper audit o
 *   **Styling**: Tailwind CSS
 *   **Auth**: JWT-based session management + OpenID Connect (OIDC)
 *   **Export**: docx.js
+
+![Secure Login & SSO](docs/images/login_sso.png)
 
 ## 💻 Installation & Setup
 
