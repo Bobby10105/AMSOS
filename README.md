@@ -150,3 +150,6 @@ server {
 
 ## 🛡 Security Note
 For production environments, always change the `JWT_SECRET` and ensure the `NEXT_PUBLIC_BASE_URL` matches your deployed domain. Ensure your Identity Provider (IDP) is configured with the correct callback URL: `https://your-domain.gov/api/auth/sso/callback`.
+
+---
+[License](LICENSE) | [Security Policy](SECURITY.md) | [Disclaimer](DISCLAIMER.md)
