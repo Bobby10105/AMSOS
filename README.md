@@ -49,9 +49,13 @@ AMSOS uses a tiered permission model to ensure data integrity and proper audit o
 
 ### 2. Setup
 ```bash
+# Clone the repository
+git clone https://github.com/bobbooshay/AMSOS.git
+cd AMSOS
+
 # Install dependencies
 npm install
-
+```
 # Create the database and sync the schema
 npx prisma db push
 
