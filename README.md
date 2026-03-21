@@ -58,7 +58,7 @@ AMSOS uses a tiered permission model to ensure data integrity and proper audit o
 ### 2. Setup
 ```bash
 # Clone the repository
-git clone https://github.com/bobbooshay/AMSOS.git
+git clone https://github.com/Bobby10105/AMSOS.git
 cd AMSOS
 
 # Install dependencies
