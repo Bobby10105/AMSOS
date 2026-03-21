@@ -4,6 +4,14 @@
 
 AMSOS is a simple, modern, and open-source web application designed for auditors to document audit programs and procedures. It streamlines the audit lifecycle across Planning, Fieldwork, and Reporting phases with built-in sign-off tracking, reviewer collaboration, and professional document export.
 
+## 🌟 Background & Mission
+
+The purpose of this project is to provide free, open-source audit management software to audit offices worldwide. 
+
+This software was "vibe-coded" by a CPA with 10 years of audit experience who was looking for a free, open-source alternative to expensive proprietary solutions. We believe that high-quality audit tools should be accessible to every auditor, regardless of budget.
+
+**Contributions are welcomed!** Whether you are an auditor with feature ideas or a developer looking to help, please feel free to open an issue or submit a pull request.
+
 ## 🚀 Key Features
 
 *   **Project Dashboard**: Overview of all active and completed audits.
