@@ -1,0 +1,106 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                 String   @id @default(uuid())
+  username           String   @unique
+  password           String?
+  role               String
+  ssoProvider        String?
+  ssoId              String?  @unique
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  
+  teamMembers        TeamMember[]
+}
+
+model Audit {
+  id                 String       @id @default(uuid())
+  title              String
+  description        String?
+  objective          String?
+  status             String       @default("In Progress")
+  planningDate       DateTime?
+  fieldworkStartDate DateTime?
+  fieldworkEndDate   DateTime?
+  reportIssuedDate   DateTime?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+  procedures         Procedure[]
+  teamMembers        TeamMember[]
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  auditId   String
+  userId    String?
+  name      String
+  role      String?
+  email     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  audit     Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+model Procedure {
+  id           String       @id @default(uuid())
+  auditId      String
+  phase        String
+  title        String?
+  purpose      String?
+  source       String?
+  scope        String?
+  methodology  String?
+  results      String?
+  conclusions  String?
+  preparedBy   String?
+  preparedDate DateTime?
+  reviewedBy   String?
+  reviewedDate DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  attachments  Attachment[]
+  messages     ProcedureMessage[]
+  audit        Audit        @relation(fields: [auditId], references: [id], onDelete: Cascade)
+}
+
+model ProcedureMessage {
+  id          String    @id @default(uuid())
+  procedureId String
+  text        String
+  author      String
+  createdAt   DateTime  @default(now())
+  
+  procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+}
+
+model Attachment {
+  id          String    @id @default(uuid())
+  procedureId String
+  filename    String
+  filepath    String
+  mimetype    String?
+  size        Int?
+  displayOrder Int?
+  createdAt   DateTime  @default(now())
+
+  procedure   Procedure @relation(fields: [procedureId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id          String   @id @default(uuid())
+  action      String
+  entityType  String
+  entityId    String
+  details     String
+  performedBy String?
+  timestamp   DateTime @default(now())
+}

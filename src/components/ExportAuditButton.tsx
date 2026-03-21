@@ -1,0 +1,257 @@
+'use client';
+
+import { useState } from 'react';
+import { FileText, Loader2 } from 'lucide-react';
+import { 
+  Document, 
+  Packer, 
+  Paragraph, 
+  TextRun, 
+  HeadingLevel, 
+  Table, 
+  TableRow, 
+  TableCell, 
+  WidthType, 
+  BorderStyle, 
+  AlignmentType 
+} from 'docx';
+import { saveAs } from 'file-saver';
+import { format } from 'date-fns';
+import type { AuditWithRelations } from '@/lib/types';
+
+export default function ExportAuditButton({ audit }: { audit: AuditWithRelations }) {
+  const [isExporting, setIsExporting] = useState(false);
+
+  const handleExport = async () => {
+    setIsExporting(true);
+    try {
+      const sections = [];
+
+      // Title Section
+      sections.push(
+        new Paragraph({
+          text: `Audit Program: ${audit.title}`,
+          heading: HeadingLevel.HEADING_1,
+          alignment: AlignmentType.CENTER,
+          spacing: { after: 200 },
+        }),
+        new Paragraph({
+          children: [
+            new TextRun({ text: "Date Exported: ", bold: true }),
+            new TextRun(format(new Date(), 'PPP')),
+          ],
+          spacing: { after: 400 },
+        }),
+        new Paragraph({
+          text: "Audit Objective",
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 200, after: 100 },
+        }),
+        new Paragraph({
+          text: audit.objective || 'No objective provided.',
+          spacing: { after: 400 },
+        })
+      );
+
+      // Team Section
+      if (audit.teamMembers && audit.teamMembers.length > 0) {
+        sections.push(
+          new Paragraph({
+            text: "Audit Team",
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 200, after: 100 },
+          }),
+          new Table({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+              new TableRow({
+                children: [
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Name", bold: true })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Role", bold: true })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Email", bold: true })] })] }),
+                ],
+              }),
+              ...audit.teamMembers.map(member => new TableRow({
+                children: [
+                  new TableCell({ children: [new Paragraph({ text: member.name || 'N/A' })] }),
+                  new TableCell({ children: [new Paragraph({ text: member.role || 'N/A' })] }),
+                  new TableCell({ children: [new Paragraph({ text: member.email || 'N/A' })] }),
+                ],
+              })),
+            ],
+          }),
+          new Paragraph({ text: "", spacing: { after: 400 } })
+        );
+      }
+
+      // Milestones Section
+      const formatDate = (date: Date | null | undefined) => {
+        if (!date) return 'N/A';
+        try {
+          const d = new Date(date);
+          return isNaN(d.getTime()) ? 'N/A' : format(d, 'PP');
+        } catch {
+          return 'N/A';
+        }
+      };
+
+      sections.push(
+        new Paragraph({
+          text: "Project Milestones",
+          heading: HeadingLevel.HEADING_2,
+          spacing: { before: 200, after: 100 },
+        }),
+        new Table({
+          width: { size: 100, type: WidthType.PERCENTAGE },
+          rows: [
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Milestone", bold: true })] })] }),
+                new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Date", bold: true })] })] }),
+              ],
+            }),
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph({ text: "Planning Date" })] }),
+                new TableCell({ children: [new Paragraph({ text: formatDate(audit.planningDate) })] }),
+              ],
+            }),
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph({ text: "Fieldwork Start Date" })] }),
+                new TableCell({ children: [new Paragraph({ text: formatDate(audit.fieldworkStartDate) })] }),
+              ],
+            }),
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph({ text: "Fieldwork End Date" })] }),
+                new TableCell({ children: [new Paragraph({ text: formatDate(audit.fieldworkEndDate) })] }),
+              ],
+            }),
+            new TableRow({
+              children: [
+                new TableCell({ children: [new Paragraph({ text: "Report Issued Date" })] }),
+                new TableCell({ children: [new Paragraph({ text: formatDate(audit.reportIssuedDate) })] }),
+              ],
+            }),
+          ],
+        }),
+        new Paragraph({ text: "", spacing: { after: 400 } })
+      );
+
+      // Phases and Procedures
+      const phases = ['Planning', 'Fieldwork', 'Reporting'];
+      for (const phase of phases) {
+        const phaseProcedures = audit.procedures.filter(p => p.phase === phase);
+        if (phaseProcedures.length === 0) continue;
+
+        sections.push(
+          new Paragraph({
+            text: `Phase: ${phase}`,
+            heading: HeadingLevel.HEADING_2,
+            spacing: { before: 400, after: 200 },
+          })
+        );
+
+        for (const [index, p] of phaseProcedures.entries()) {
+          sections.push(
+            new Paragraph({
+              text: `Procedure #${index + 1}: ${p.title || 'Untitled'}`,
+              heading: HeadingLevel.HEADING_3,
+              spacing: { before: 200, after: 100 },
+            }),
+            new Paragraph({
+              children: [new TextRun({ text: "Purpose:", bold: true })],
+            }),
+            new Paragraph({ text: p.purpose || 'N/A', spacing: { after: 100 } }),
+            
+            new Paragraph({
+              children: [new TextRun({ text: "Source:", bold: true })],
+            }),
+            new Paragraph({ text: p.source || 'N/A', spacing: { after: 100 } }),
+
+            new Paragraph({
+              children: [new TextRun({ text: "Scope:", bold: true })],
+            }),
+            new Paragraph({ text: p.scope || 'N/A', spacing: { after: 100 } }),
+
+            new Paragraph({
+              children: [new TextRun({ text: "Methodology:", bold: true })],
+            }),
+            new Paragraph({ text: p.methodology || 'N/A', spacing: { after: 100 } }),
+
+            new Paragraph({
+              children: [new TextRun({ text: "Results:", bold: true })],
+            }),
+            new Paragraph({ text: p.results || 'N/A', spacing: { after: 100 } }),
+
+            new Paragraph({
+              children: [new TextRun({ text: "Conclusions:", bold: true })],
+            }),
+            new Paragraph({ text: p.conclusions || 'N/A', spacing: { after: 200 } })
+          );
+
+          // Sign-off Table
+          sections.push(
+            new Table({
+              width: { size: 100, type: WidthType.PERCENTAGE },
+              rows: [
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      children: [new Paragraph({ children: [new TextRun({ text: "Prepared By: ", bold: true }), new TextRun(p.preparedBy || 'N/A')] })],
+                    }),
+                    new TableCell({
+                      children: [new Paragraph({ children: [new TextRun({ text: "Reviewed By: ", bold: true }), new TextRun(p.reviewedBy || 'N/A')] })],
+                    }),
+                  ],
+                }),
+                new TableRow({
+                  children: [
+                    new TableCell({
+                      children: [new Paragraph({ children: [new TextRun({ text: "Date: ", bold: true }), new TextRun(p.preparedDate ? format(new Date(p.preparedDate), 'PP') : 'N/A')] })],
+                    }),
+                    new TableCell({
+                      children: [new Paragraph({ children: [new TextRun({ text: "Date: ", bold: true }), new TextRun(p.reviewedDate ? format(new Date(p.reviewedDate), 'PP') : 'N/A')] })],
+                    }),
+                  ],
+                }),
+              ],
+            }),
+            new Paragraph({ text: "", spacing: { after: 400 } }) // Spacer
+          );
+        }
+      }
+
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: sections,
+        }],
+      });
+
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `Audit_Program_${audit.title.replace(/\s+/g, '_')}_${format(new Date(), 'yyyyMMdd')}.docx`);
+    } catch (error) {
+      console.error('Export error:', error);
+      alert('Failed to export the audit documentation.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleExport}
+      disabled={isExporting}
+      className="flex items-center space-x-2 px-4 py-2 bg-blue-900 text-white rounded-md hover:bg-blue-800 transition-colors disabled:opacity-50 shadow-sm"
+    >
+      {isExporting ? (
+        <Loader2 className="w-4 h-4 animate-spin" />
+      ) : (
+        <FileText className="w-4 h-4" />
+      )}
+      <span>{isExporting ? 'Generating...' : 'Export Word (.docx)'}</span>
+    </button>
+  );
+}
