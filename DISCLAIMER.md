@@ -26,3 +26,6 @@ Users are responsible for the security and privacy of the data they input into A
 
 ## External Contributions
 Contributions from the community are welcomed and encouraged. However, the project maintainers do not guarantee the accuracy, safety, or effectiveness of any community-contributed code. Users must independently review and test all updates before deploying them in a production environment.
+
+## Personal Capacity & Maintenance
+This project was developed in my personal capacity. The views, code, and opinions expressed here are my own. Future issues or pull requests will be addressed solely during personal time and using personal resources.
