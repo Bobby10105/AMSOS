@@ -16,7 +16,7 @@ AMSOS is a simple, modern, and open-source web application designed for auditors
 *   **Professional Export**: Generate a complete "Audit Program" in Word (.docx) format with one click.
 *   **Secure Access**: Built-in authentication with granular role-based access control and **Federal SSO (OIDC)** support.
 
-![Audit Details and Sign-offs](docs/images/audit_details.png)
+![Audit View](docs/images/audit_view.png)
 
 ## 🔐 Roles & Permissions
 
@@ -29,7 +29,7 @@ AMSOS uses a tiered permission model to ensure data integrity and proper audit o
 | **Auditor** | Can document procedures, upload attachments, and sign off as a preparer. |
 | **Specialist** | Can document procedures and sign off, but is **restricted from deleting procedures**. |
 
-![User Management](docs/images/user_management.png)
+![Procedure View](docs/images/procedure_view.png)
 
 ## 🛠 Tech Stack
 
@@ -39,7 +39,7 @@ AMSOS uses a tiered permission model to ensure data integrity and proper audit o
 *   **Auth**: JWT-based session management + OpenID Connect (OIDC)
 *   **Export**: docx.js
 
-![Secure Login & SSO](docs/images/login_sso.png)
+![Comments and Attachments](docs/images/comment_attachment_view.png)
 
 ## 💻 Installation & Setup
 
@@ -56,6 +56,7 @@ cd AMSOS
 # Install dependencies
 npm install
 ```
+
 # Create the database and sync the schema
 npx prisma db push
 
