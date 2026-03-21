@@ -55,7 +55,6 @@ cd AMSOS
 
 # Install dependencies
 npm install
-```
 
 # Create the database and sync the schema
 npx prisma db push
