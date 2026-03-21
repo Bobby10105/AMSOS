@@ -148,8 +148,16 @@ server {
 *   `/prisma`: Database schema and configuration.
 *   `/public/uploads`: Local storage for audit procedure attachments.
 
-## 🛡 Security Note
-For production environments, always change the `JWT_SECRET` and ensure the `NEXT_PUBLIC_BASE_URL` matches your deployed domain. Ensure your Identity Provider (IDP) is configured with the correct callback URL: `https://your-domain.gov/api/auth/sso/callback`.
+## 🛡 Security & Responsibility
+**The user is solely responsible for the security, configuration, and proper deployment of this software.** 
+
+The authors and contributors accept **no responsibility** for security incidents, data breaches, data loss, or system failures. Users must ensure:
+*   **Environment Security**: Always change the `JWT_SECRET` and secure your `.env` file.
+*   **Configuration**: Proper server, network, and database configuration is required for safe operation.
+*   **SSL/TLS**: Production environments must be deployed behind a secure reverse proxy with HTTPS enabled.
+*   **SSO Callback**: Ensure your Identity Provider (IDP) is configured with the correct callback URL: `https://your-domain.com/api/auth/sso/callback`.
+
+Please review the full [Disclaimer](DISCLAIMER.md) before use.
 
 ---
 [License](LICENSE) | [Security Policy](SECURITY.md) | [Disclaimer](DISCLAIMER.md)
