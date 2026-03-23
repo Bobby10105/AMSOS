@@ -3,12 +3,13 @@ import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
 const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
+const SESSION_DURATION = parseInt(process.env.SESSION_DURATION_SECONDS || '3600', 10); // Default 1 hour
 
 export async function encrypt(payload: JWTPayload) {
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
-    .setExpirationTime('24h')
+    .setExpirationTime(`${SESSION_DURATION}s`)
     .sign(secretKey);
 }
 
@@ -36,7 +37,7 @@ export async function getSession(): Promise<{ user: { id: string; username: stri
 }
 
 export async function login(user: { id: string; username: string; role: string }) {
-  const expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const expires = new Date(Date.now() + SESSION_DURATION * 1000);
   const session = await encrypt({ user, expires });
 
   const cookieStore = await cookies();
@@ -64,14 +65,16 @@ export async function updateSession(request: NextRequest) {
 
   // Refresh the session so it doesn't expire
   const parsed = await decrypt(session);
-  parsed.expires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  const expires = new Date(Date.now() + SESSION_DURATION * 1000);
+  parsed.expires = expires;
+  
   const res = NextResponse.next();
   res.cookies.set({
     name: 'session',
     value: await encrypt(parsed),
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    expires: parsed.expires as Date,
+    expires: expires,
     sameSite: 'lax',
     path: '/',
   });

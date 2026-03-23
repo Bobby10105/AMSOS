@@ -5,27 +5,54 @@ export async function middleware(request: NextRequest) {
   const session = request.cookies.get('session')?.value;
   const { pathname } = request.nextUrl;
 
+  // 1. Setup Response and Security Headers
+  let response = NextResponse.next();
+  
+  // Security Headers (NIST/OMB M-15-13 Compliance)
+  response.headers.set('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  response.headers.set(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'none';"
+  );
+
+  // 2. Authentication Logic
   // Paths that don't require authentication
-  if (
+  const isPublicPath = 
     pathname === '/login' || 
     pathname.startsWith('/api/login') || 
     pathname.startsWith('/api/auth/sso') ||
     pathname.startsWith('/_next') || 
     pathname === '/favicon.ico' ||
-    pathname.startsWith('/uploads')
-  ) {
-    return NextResponse.next();
+    pathname.startsWith('/uploads');
+
+  if (isPublicPath) {
+    return response;
   }
 
   if (!session) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    const loginUrl = new URL('/login', request.url);
+    const redirectResponse = NextResponse.redirect(loginUrl);
+    // Copy headers to the redirect response
+    response.headers.forEach((value, key) => {
+      redirectResponse.headers.set(key, value);
+    });
+    return redirectResponse;
   }
 
   try {
     await decrypt(session);
-    return NextResponse.next();
+    return response;
   } catch (error) {
-    return NextResponse.redirect(new URL('/login', request.url));
+    const loginUrl = new URL('/login', request.url);
+    const redirectResponse = NextResponse.redirect(loginUrl);
+    response.headers.forEach((value, key) => {
+      redirectResponse.headers.set(key, value);
+    });
+    return redirectResponse;
   }
 }
 
