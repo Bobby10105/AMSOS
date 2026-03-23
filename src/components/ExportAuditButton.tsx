@@ -65,9 +65,9 @@ export default function ExportAuditButton({ audit }: { audit: AuditWithRelations
             rows: [
               new TableRow({
                 children: [
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Name", bold: true })] })] }),
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Role", bold: true })] })] }),
-                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Email", bold: true })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Display Name", bold: true })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Audit Role", bold: true })] })] }),
+                  new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "System Username / Email", bold: true })] })] }),
                 ],
               }),
               ...audit.teamMembers.map(member => new TableRow({
