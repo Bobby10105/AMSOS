@@ -296,6 +296,8 @@ export default function UserManagementPage() {
                 <option value="Auditor">Auditor</option>
                 <option value="Specialist">Specialist</option>
                 <option value="Audit Manager">Audit Manager</option>
+                <option value="Audit Director">Audit Director</option>
+                <option value="Audit Partner">Audit Partner</option>
                 <option value="Administrator">Administrator</option>
               </select>
             </div>
@@ -334,7 +336,7 @@ export default function UserManagementPage() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wide ${
                     user.role === 'Administrator' ? 'bg-purple-50 text-purple-700' : 
-                    user.role === 'Audit Manager' ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'
+                    (user.role === 'Audit Manager' || user.role === 'Audit Director' || user.role === 'Audit Partner') ? 'bg-blue-50 text-blue-700' : 'bg-green-50 text-green-700'
                   }`}>
                     {user.role}
                   </span>

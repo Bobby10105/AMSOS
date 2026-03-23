@@ -26,16 +26,26 @@ This software was "vibe-coded" by a CPA with 10 years of audit experience who wa
 
 ![Audit View](docs/images/audit_view.png)
 
-## 🔐 Roles & Permissions
+## 🔐 Roles & Permissions (RBAC)
 
-AMSOS uses a tiered permission model to ensure data integrity and proper audit oversight:
+AMSOS uses a granular **Role-Based Access Control (RBAC)** model to ensure data integrity and proper audit oversight. Access is controlled at two levels: system-wide roles and audit-specific team assignments.
+
+### System Roles
 
 | Role | Capabilities |
 | :--- | :--- |
-| **Administrator** | Full system access. Can manage the user directory, create/import users, and delete entire audits. |
-| **Audit Manager** | Can create, edit, and sign off on audits. Full procedure management. |
-| **Auditor** | Can document procedures, upload attachments, and sign off as a preparer. |
-| **Specialist** | Can document procedures and sign off, but is **restricted from deleting procedures**. |
+| **Administrator** | Full system access. Can manage the user directory (add/import/delete users) and delete entire audits. |
+| **Audit Partner** | Senior management role. Can create, edit, and sign off on any audit they are assigned to. |
+| **Audit Director** | Senior management role. Can create, edit, and sign off on any audit they are assigned to. |
+| **Audit Manager** | Management role. Can create, edit, and sign off on any audit they are assigned to. |
+| **Auditor** | Standard role. Can document procedures, upload attachments, and sign off as a preparer. |
+| **Specialist** | Contributor role. Can document procedures but is **restricted from deleting procedures** to protect data integrity. |
+
+### Access Control Rules
+*   **Audit Visibility**: Non-administrators can **only** see and access audits to which they have been explicitly added as a **Team Member**.
+*   **Audit Deletion**: A safety-first approach restricts audit deletion strictly to the **Administrator** role.
+*   **Review Workflow**: While any role can be assigned to an audit, typically senior roles (Partner, Director, Manager) perform the final "Reviewed By" sign-off.
+*   **Audit Logs**: All sensitive actions (logins, deletions, user changes) are tracked in the system-wide Audit Logs for compliance.
 
 ![Procedure View](docs/images/procedure_view.png)
 

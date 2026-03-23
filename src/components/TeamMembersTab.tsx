@@ -226,6 +226,9 @@ export default function TeamMembersTab({ auditId, initialTeamMembers }: { auditI
                       className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all text-gray-800 appearance-none"
                     >
                       <option value="">Select Role</option>
+                      <option value="Audit Director">Audit Director</option>
+                      <option value="Audit Partner">Audit Partner</option>
+                      <option value="Audit Manager">Audit Manager</option>
                       <option value="Lead Auditor">Lead Auditor</option>
                       <option value="Senior Auditor">Senior Auditor</option>
                       <option value="Staff Auditor">Staff Auditor</option>
