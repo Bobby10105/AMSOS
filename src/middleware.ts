@@ -47,6 +47,7 @@ export async function middleware(request: NextRequest) {
     await decrypt(session);
     return response;
   } catch (error) {
+    console.error('[Middleware] Session decryption failed:', error);
     const loginUrl = new URL('/login', request.url);
     const redirectResponse = NextResponse.redirect(loginUrl);
     response.headers.forEach((value, key) => {

@@ -12,7 +12,6 @@ import {
   TableRow, 
   TableCell, 
   WidthType, 
-  BorderStyle, 
   AlignmentType 
 } from 'docx';
 import { saveAs } from 'file-saver';
@@ -108,12 +107,6 @@ export default function ExportAuditButton({ audit }: { audit: AuditWithRelations
               children: [
                 new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Milestone", bold: true })] })] }),
                 new TableCell({ children: [new Paragraph({ children: [new TextRun({ text: "Date", bold: true })] })] }),
-              ],
-            }),
-            new TableRow({
-              children: [
-                new TableCell({ children: [new Paragraph({ text: "Planning Date" })] }),
-                new TableCell({ children: [new Paragraph({ text: formatDate(audit.planningDate) })] }),
               ],
             }),
             new TableRow({

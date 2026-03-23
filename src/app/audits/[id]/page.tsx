@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import AuditTabs from '@/components/AuditTabs';
 import EditableAuditHeader from '@/components/EditableAuditHeader';
 import { getSession } from '@/lib/auth';
@@ -9,30 +9,50 @@ import { getSession } from '@/lib/auth';
 export default async function AuditDetail(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const session = await getSession();
-  const userRole = session?.user?.role || 'User';
+  
+  if (!session) {
+    redirect('/login');
+  }
+
+  const user = session.user;
+  const userRole = user.role || 'User';
 
   try {
     // 1. Fetch Audit via standard Prisma
     const audit = await prisma.audit.findUnique({
       where: { id: params.id },
+      include: {
+        teamMembers: true,
+      }
     });
 
     if (!audit) {
       notFound();
     }
 
-    // 2. Fetch Team Members
-    const teamMembers = await prisma.teamMember.findMany({
-      where: { auditId: audit.id }
-    });
+    // Access Control: Only allow team members or Administrators
+    if (userRole !== 'Administrator') {
+      const isMember = audit.teamMembers.some(m => m.userId === user.id);
+      if (!isMember) {
+        return (
+          <div className="p-8 text-center bg-yellow-50 rounded-xl border border-yellow-200 text-yellow-800">
+            <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+            <p className="mb-4">You are not authorized to view this audit. Please contact the administrator if you believe this is an error.</p>
+            <div className="mt-6">
+              <Link href="/" className="text-blue-600 underline font-medium">Return to Dashboard</Link>
+            </div>
+          </div>
+        );
+      }
+    }
 
-    // 3. Fetch Procedures with RAW logic to avoid schema mismatch errors
+    // 2. Fetch Procedures with RAW logic to avoid schema mismatch errors
     const rawProcedures: any[] = await prisma.$queryRawUnsafe(
       `SELECT * FROM Procedure WHERE auditId = ?`,
       audit.id
     );
 
-    // 4. For each procedure, fetch attachments and messages
+    // 3. For each procedure, fetch attachments and messages
     const proceduresWithRelations = await Promise.all(rawProcedures.map(async (proc) => {
       const attachments: any[] = await prisma.$queryRawUnsafe(
         `SELECT * FROM Attachment WHERE procedureId = ? ORDER BY displayOrder ASC`,
@@ -53,7 +73,6 @@ export default async function AuditDetail(props: { params: Promise<{ id: string 
 
     const finalAuditData = {
       ...audit,
-      teamMembers,
       procedures: proceduresWithRelations
     };
 

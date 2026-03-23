@@ -18,7 +18,6 @@ export default function MilestonesTab({ audit }: { audit: Audit }) {
   };
 
   const getInitialState = (a: Audit) => ({
-    planningDate: formatDateForInput(a.planningDate),
     fieldworkStartDate: formatDateForInput(a.fieldworkStartDate),
     fieldworkEndDate: formatDateForInput(a.fieldworkEndDate),
     reportIssuedDate: formatDateForInput(a.reportIssuedDate),
@@ -43,8 +42,6 @@ export default function MilestonesTab({ audit }: { audit: Audit }) {
     }
     
     setSaving(true);
-    console.log(`Attempting to save milestones for audit ${audit.id}:`, data);
-    
     try {
       const res = await fetch(`/api/audits/${audit.id}`, {
         method: 'PUT',
@@ -53,24 +50,19 @@ export default function MilestonesTab({ audit }: { audit: Audit }) {
       });
 
       if (res.ok) {
-        console.log("Milestones saved successfully.");
         router.refresh();
       } else {
         const errorData = await res.json();
-        console.error('Failed to save milestones:', errorData);
-        alert(`Failed to save milestones: ${errorData.message || 'Server error'} (Status: ${res.status})`);
+        alert(`Failed to save milestones: ${errorData.message || 'Server error'}`);
       }
     } catch (error) {
-      const e = error as Error;
-      console.error('Network or unexpected error:', e);
-      alert(`An error occurred: ${e.message || 'Check connection'}`);
+      alert(`An error occurred: ${(error as Error).message}`);
     } finally {
       setSaving(false);
     }
   };
 
   const milestones = [
-    { name: 'planningDate', label: 'Planning Date' },
     { name: 'fieldworkStartDate', label: 'Fieldwork Start Date' },
     { name: 'fieldworkEndDate', label: 'Fieldwork End Date' },
     { name: 'reportIssuedDate', label: 'Report Issued Date' },

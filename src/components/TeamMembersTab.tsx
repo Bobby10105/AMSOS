@@ -2,20 +2,47 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { UserPlus, Trash2, Mail, Briefcase, User, Loader2, AlertCircle } from 'lucide-react';
+import { UserPlus, Trash2, Mail, Briefcase, User, Loader2, AlertCircle, Search } from 'lucide-react';
 
 interface TeamMember {
   id: string;
   name: string;
   role: string | null;
   email: string | null;
+  userId?: string | null;
+}
+
+interface SystemUser {
+  id: string;
+  username: string;
+  role: string;
 }
 
 export default function TeamMembersTab({ auditId, initialTeamMembers }: { auditId: string, initialTeamMembers: any[] }) {
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>(initialTeamMembers);
+  const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
   const [creating, setCreating] = useState(false);
+  const [loadingUsers, setLoadingUsers] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
+
+  // Fetch system users on mount
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        const res = await fetch('/api/users');
+        if (res.ok) {
+          const data = await res.json();
+          setSystemUsers(data);
+        }
+      } catch (err) {
+        console.error('Failed to fetch system users:', err);
+      } finally {
+        setLoadingUsers(false);
+      }
+    }
+    fetchUsers();
+  }, []);
 
   // Sync state if props change
   useEffect(() => {
@@ -48,12 +75,12 @@ export default function TeamMembersTab({ auditId, initialTeamMembers }: { auditI
     }
   };
 
-  const handleUpdateMember = (id: string, field: string, value: string) => {
-    setTeamMembers(prev => prev.map(m => m.id === id ? { ...m, [field]: value } : m));
+  const handleUpdateMember = (id: string, updates: Partial<TeamMember>) => {
+    setTeamMembers(prev => prev.map(m => m.id === id ? { ...m, ...updates } : m));
   };
 
-  const handleSaveMember = async (memberId: string) => {
-    const member = teamMembers.find(m => m.id === memberId);
+  const handleSaveMember = async (memberId: string, manualMember?: TeamMember) => {
+    const member = manualMember || teamMembers.find(m => m.id === memberId);
     if (!member) return;
 
     try {
@@ -88,6 +115,28 @@ export default function TeamMembersTab({ auditId, initialTeamMembers }: { auditI
     } catch (err: any) {
       console.error('Delete member error:', err);
       setError(err.message);
+    }
+  };
+
+  const handleUserSelect = (memberId: string, username: string) => {
+    const selectedUser = systemUsers.find(u => u.username === username);
+    if (!selectedUser) {
+      handleUpdateMember(memberId, { email: username });
+      return;
+    }
+
+    const updates = {
+      email: selectedUser.username,
+      name: selectedUser.username, // Default name to username if not otherwise specified
+      userId: selectedUser.id
+    };
+
+    handleUpdateMember(memberId, updates);
+    
+    // Trigger save immediately
+    const member = teamMembers.find(m => m.id === memberId);
+    if (member) {
+      handleSaveMember(memberId, { ...member, ...updates });
     }
   };
 
@@ -128,40 +177,61 @@ export default function TeamMembersTab({ auditId, initialTeamMembers }: { auditI
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="flex flex-col">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center">
-                    <User className="w-3 h-3 mr-1" /> Name
+                    <Mail className="w-3 h-3 mr-1" /> Select User
+                  </label>
+                  <select
+                    value={member.email || ''}
+                    onChange={(e) => handleUserSelect(member.id, e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all text-gray-800 appearance-none font-medium"
+                  >
+                    <option value="">Choose a System User...</option>
+                    {systemUsers.map(u => (
+                      <option key={u.id} value={u.username}>
+                        {u.username} ({u.role})
+                      </option>
+                    ))}
+                    <option value="custom">-- Custom / Other --</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col">
+                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center">
+                    <User className="w-3 h-3 mr-1" /> Display Name
                   </label>
                   <input
                     value={member.name || ''}
-                    onChange={(e) => handleUpdateMember(member.id, 'name', e.target.value)}
+                    onChange={(e) => handleUpdateMember(member.id, { name: e.target.value })}
                     onBlur={() => handleSaveMember(member.id)}
                     className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all text-gray-800 font-semibold"
                     placeholder="Full Name"
                   />
                 </div>
+                
                 <div className="flex flex-col">
                   <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center">
-                    <Briefcase className="w-3 h-3 mr-1" /> Role
-                  </label>
-                  <input
-                    value={member.role || ''}
-                    onChange={(e) => handleUpdateMember(member.id, 'role', e.target.value)}
-                    onBlur={() => handleSaveMember(member.id)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all text-gray-800"
-                    placeholder="e.g. Lead Auditor"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2 flex items-center">
-                    <Mail className="w-3 h-3 mr-1" /> Email / Username
+                    <Briefcase className="w-3 h-3 mr-1" /> Audit Role
                   </label>
                   <div className="flex space-x-2">
-                    <input
-                      value={member.email || ''}
-                      onChange={(e) => handleUpdateMember(member.id, 'email', e.target.value)}
-                      onBlur={() => handleSaveMember(member.id)}
-                      className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all text-gray-800"
-                      placeholder="matching-username@email.com"
-                    />
+                    <select
+                      value={member.role || ''}
+                      onChange={(e) => {
+                        const newRole = e.target.value;
+                        handleUpdateMember(member.id, { role: newRole });
+                        // Trigger save immediately for select
+                        const memberToSave = teamMembers.find(m => m.id === member.id);
+                        if (memberToSave) {
+                          handleSaveMember(member.id, { ...memberToSave, role: newRole });
+                        }
+                      }}
+                      className="flex-1 px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 focus:bg-white transition-all text-gray-800 appearance-none"
+                    >
+                      <option value="">Select Role</option>
+                      <option value="Lead Auditor">Lead Auditor</option>
+                      <option value="Senior Auditor">Senior Auditor</option>
+                      <option value="Staff Auditor">Staff Auditor</option>
+                      <option value="Specialist">Specialist</option>
+                      <option value="Quality Reviewer">Quality Reviewer</option>
+                    </select>
                     <button
                       onClick={() => handleDeleteMember(member.id, member.name)}
                       className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"

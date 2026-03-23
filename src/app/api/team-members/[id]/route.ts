@@ -12,15 +12,21 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
     const params = await props.params;
     const data = await req.json();
 
-    // Re-check for user link if name or email changed
-    const user = await prisma.user.findFirst({
-      where: {
-        OR: [
-          ...(data.email ? [{ username: data.email }] : []),
-          ...(data.name ? [{ username: data.name }] : [])
-        ]
-      }
-    });
+    // If userId was explicitly provided (from the dropdown), use it.
+    // Otherwise, try to find a user by email/name as a fallback.
+    let userId = data.userId;
+    
+    if (!userId && (data.email || data.name)) {
+      const user = await prisma.user.findFirst({
+        where: {
+          OR: [
+            ...(data.email ? [{ username: data.email }] : []),
+            ...(data.name ? [{ username: data.name }] : [])
+          ]
+        }
+      });
+      userId = user?.id || null;
+    }
 
     const teamMember = await prisma.teamMember.update({
       where: { id: params.id },
@@ -28,7 +34,7 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
         name: data.name,
         role: data.role,
         email: data.email,
-        userId: user?.id || null,
+        userId: userId,
       }
     });
     return NextResponse.json(teamMember);

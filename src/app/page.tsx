@@ -2,11 +2,32 @@ import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
 import { PlusCircle, Calendar, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
+import { getSession } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
 
 export default async function Dashboard() {
+  const session = await getSession();
+  const user = session?.user;
+
+  // Default filter for non-logged in or non-admin users
+  let whereClause: any = {};
+  
+  if (!user) {
+    // If no user session, show nothing (middleware should ideally prevent this)
+    whereClause = { id: 'none' };
+  } else if (user.role !== 'Administrator') {
+    whereClause = {
+      teamMembers: {
+        some: {
+          userId: user.id
+        }
+      }
+    };
+  }
+
   const audits = await prisma.audit.findMany({
+    where: whereClause,
     orderBy: { createdAt: 'desc' }
   });
 
@@ -14,15 +35,19 @@ export default async function Dashboard() {
     <div>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Audits Dashboard</h1>
-        <Link href="/audits/new" className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors shadow-sm">
-          <PlusCircle className="w-5 h-5" />
-          <span>New Audit</span>
-        </Link>
+        {user?.role === 'Administrator' && (
+          <Link href="/audits/new" className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors shadow-sm">
+            <PlusCircle className="w-5 h-5" />
+            <span>New Audit</span>
+          </Link>
+        )}
       </div>
 
       {audits.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">
-          No audits found. Create a new one to get started.
+          {user?.role === 'Administrator' 
+            ? "No audits found. Create a new one to get started." 
+            : "No audits assigned to you yet."}
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

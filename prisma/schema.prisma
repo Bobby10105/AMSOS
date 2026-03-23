@@ -26,7 +26,6 @@ model Audit {
   description        String?
   objective          String?
   status             String       @default("In Progress")
-  planningDate       DateTime?
   fieldworkStartDate DateTime?
   fieldworkEndDate   DateTime?
   reportIssuedDate   DateTime?
