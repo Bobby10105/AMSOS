@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Save, Plus, Trash2, Loader2, AlertCircle, CheckCircle, Info, ArrowUp, ArrowDown } from 'lucide-react';
+import { Save, Plus, Trash2, Loader2, AlertCircle, CheckCircle, Info, ArrowUp, ArrowDown, FolderPlus } from 'lucide-react';
 
 interface TemplateProcedure {
   id?: string;
@@ -11,11 +11,19 @@ interface TemplateProcedure {
   displayOrder: number;
 }
 
+interface TemplateGroup {
+  id?: string;
+  phase: string;
+  title: string;
+  displayOrder: number;
+  procedures: TemplateProcedure[];
+}
+
 interface Template {
   id: string;
   name: string;
   description: string | null;
-  procedures: TemplateProcedure[];
+  groups: TemplateGroup[];
 }
 
 const PHASES = ['Planning', 'Fieldwork', 'Reporting'];
@@ -34,11 +42,20 @@ export default function TemplateEditor({ templateId }: { templateId: string }) {
 
   const fetchTemplate = async () => {
     try {
+      console.log('[TemplateEditor] Fetching template:', templateId);
       const res = await fetch(`/api/admin/templates/${templateId}`);
-      if (!res.ok) throw new Error('Failed to fetch template details');
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.details || errData.error || `Server error ${res.status}`);
+      }
       const data = await res.json();
-      setTemplate(data);
+      console.log('[TemplateEditor] Data received:', data);
+      setTemplate({
+        ...data,
+        groups: data.groups || []
+      });
     } catch (err: any) {
+      console.error('[TemplateEditor] Fetch error:', err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -69,47 +86,75 @@ export default function TemplateEditor({ templateId }: { templateId: string }) {
     }
   };
 
-  const addProcedure = () => {
+  const addGroup = () => {
     if (!template) return;
+    const newGroup: TemplateGroup = {
+      phase: activePhase,
+      title: 'New Procedure Group',
+      displayOrder: template.groups.length,
+      procedures: []
+    };
+    setTemplate({
+      ...template,
+      groups: [...template.groups, newGroup]
+    });
+  };
+
+  const updateGroupTitle = (gIndex: number, title: string) => {
+    if (!template) return;
+    const updatedGroups = [...template.groups];
+    updatedGroups[gIndex] = { ...updatedGroups[gIndex], title };
+    setTemplate({ ...template, groups: updatedGroups });
+  };
+
+  const removeGroup = (gIndex: number) => {
+    if (!template) return;
+    if (!confirm('Delete this group and all procedures within it?')) return;
+    const updatedGroups = template.groups.filter((_, i) => i !== gIndex);
+    setTemplate({ ...template, groups: updatedGroups });
+  };
+
+  const addProcedureToGroup = (gIndex: number) => {
+    if (!template) return;
+    const updatedGroups = [...template.groups];
     const newProc: TemplateProcedure = {
       phase: activePhase,
       title: 'New Procedure',
       purpose: '',
-      displayOrder: template.procedures.length
+      displayOrder: updatedGroups[gIndex].procedures.length
     };
-    setTemplate({
-      ...template,
-      procedures: [...template.procedures, newProc]
-    });
+    updatedGroups[gIndex].procedures.push(newProc);
+    setTemplate({ ...template, groups: updatedGroups });
   };
 
-  const updateProcedure = (index: number, field: keyof TemplateProcedure, value: any) => {
+  const updateProcedure = (gIndex: number, pIndex: number, field: keyof TemplateProcedure, value: any) => {
     if (!template) return;
-    const updatedProcs = [...template.procedures];
-    updatedProcs[index] = { ...updatedProcs[index], [field]: value };
-    setTemplate({ ...template, procedures: updatedProcs });
+    const updatedGroups = [...template.groups];
+    updatedGroups[gIndex].procedures[pIndex] = { 
+      ...updatedGroups[gIndex].procedures[pIndex], 
+      [field]: value 
+    };
+    setTemplate({ ...template, groups: updatedGroups });
   };
 
-  const removeProcedure = (index: number) => {
+  const removeProcedure = (gIndex: number, pIndex: number) => {
     if (!template) return;
-    const updatedProcs = template.procedures.filter((_, i) => i !== index);
-    setTemplate({ ...template, procedures: updatedProcs });
+    const updatedGroups = [...template.groups];
+    updatedGroups[gIndex].procedures = updatedGroups[gIndex].procedures.filter((_, i) => i !== pIndex);
+    setTemplate({ ...template, groups: updatedGroups });
   };
 
-  const moveProcedure = (index: number, direction: 'up' | 'down') => {
+  const moveGroup = (index: number, direction: 'up' | 'down') => {
     if (!template) return;
-    const updatedProcs = [...template.procedures];
+    const updatedGroups = [...template.groups];
     const targetIndex = direction === 'up' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= updatedGroups.length) return;
     
-    if (targetIndex < 0 || targetIndex >= updatedProcs.length) return;
+    const temp = updatedGroups[index];
+    updatedGroups[index] = updatedGroups[targetIndex];
+    updatedGroups[targetIndex] = temp;
     
-    const temp = updatedProcs[index];
-    updatedProcs[index] = updatedProcs[targetIndex];
-    updatedProcs[targetIndex] = temp;
-    
-    // Update display orders
-    const finalProcs = updatedProcs.map((p, i) => ({ ...p, displayOrder: i }));
-    setTemplate({ ...template, procedures: finalProcs });
+    setTemplate({ ...template, groups: updatedGroups.map((g, i) => ({ ...g, displayOrder: i })) });
   };
 
   if (loading) {
@@ -122,9 +167,9 @@ export default function TemplateEditor({ templateId }: { templateId: string }) {
 
   if (!template) return null;
 
-  const filteredProcedures = template.procedures
-    .map((p, originalIndex) => ({ p, originalIndex }))
-    .filter(({ p }) => p.phase === activePhase);
+  const phaseGroups = template.groups
+    .map((g, originalIndex) => ({ g, originalIndex }))
+    .filter(({ g }) => g.phase === activePhase);
 
   return (
     <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
@@ -134,18 +179,16 @@ export default function TemplateEditor({ templateId }: { templateId: string }) {
             <h2 className="text-2xl font-black text-gray-900 uppercase tracking-tight">{template.name}</h2>
             <div className="bg-blue-100 text-blue-700 text-[10px] font-black px-2 py-0.5 rounded uppercase">Editor</div>
           </div>
-          <p className="text-sm text-gray-500 font-medium">{template.description || "Defining standard procedures for this program."}</p>
+          <p className="text-sm text-gray-500 font-medium">{template.description || "Defining standard procedure groups for this program."}</p>
         </div>
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center space-x-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-all shadow-md active:scale-95 disabled:opacity-50"
-          >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            <span>{saving ? 'Saving...' : 'Save Changes'}</span>
-          </button>
-        </div>
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="flex items-center space-x-2 px-6 py-2.5 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-all shadow-md active:scale-95 disabled:opacity-50"
+        >
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          <span>Save Changes</span>
+        </button>
       </div>
 
       <div className="px-6 border-b border-gray-200 bg-white sticky top-0 z-10">
@@ -156,10 +199,7 @@ export default function TemplateEditor({ templateId }: { templateId: string }) {
               onClick={() => setActivePhase(phase)}
               className={`
                 whitespace-nowrap py-4 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors
-                ${activePhase === phase
-                  ? 'border-blue-600 text-blue-600'
-                  : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'
-                }
+                ${activePhase === phase ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-700 hover:border-gray-300'}
               `}
             >
               {phase}
@@ -186,60 +226,81 @@ export default function TemplateEditor({ templateId }: { templateId: string }) {
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center space-x-2 text-gray-400">
             <Info className="w-4 h-4" />
-            <span className="text-xs font-bold uppercase tracking-wider">Defining {filteredProcedures.length} Procedures for {activePhase}</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Structure for {activePhase}</span>
           </div>
           <button
-            onClick={addProcedure}
-            className="flex items-center space-x-1 text-blue-600 font-bold hover:underline text-sm"
+            onClick={addGroup}
+            className="flex items-center space-x-1 bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg font-bold hover:bg-indigo-100 transition-colors text-sm border border-indigo-100"
           >
-            <Plus className="w-4 h-4" />
-            <span>Add Step</span>
+            <FolderPlus className="w-4 h-4" />
+            <span>New Group</span>
           </button>
         </div>
 
-        <div className="space-y-4">
-          {filteredProcedures.map(({ p, originalIndex }, displayIndex) => (
-            <div key={displayIndex} className="group bg-gray-50 border border-gray-200 rounded-xl p-4 transition-all hover:bg-white hover:shadow-md hover:border-blue-200">
-              <div className="flex items-start gap-4">
-                <div className="flex flex-col items-center space-y-1 mt-1">
-                  <span className="text-[10px] font-black text-gray-400 uppercase">{displayIndex + 1}</span>
-                  <button onClick={() => moveProcedure(originalIndex, 'up')} className="p-1 text-gray-300 hover:text-blue-600 disabled:opacity-0" disabled={displayIndex === 0}>
-                    <ArrowUp className="w-3 h-3" />
-                  </button>
-                  <button onClick={() => moveProcedure(originalIndex, 'down')} className="p-1 text-gray-300 hover:text-blue-600 disabled:opacity-0" disabled={displayIndex === filteredProcedures.length - 1}>
-                    <ArrowDown className="w-3 h-3" />
-                  </button>
-                </div>
-                <div className="flex-1 space-y-3">
-                  <input
-                    value={p.title}
-                    onChange={(e) => updateProcedure(originalIndex, 'title', e.target.value)}
-                    className="w-full bg-transparent font-bold text-gray-900 border-none focus:ring-0 p-0 text-lg placeholder:font-normal"
-                    placeholder="Procedure Title..."
-                  />
-                  <textarea
-                    value={p.purpose || ''}
-                    onChange={(e) => updateProcedure(originalIndex, 'purpose', e.target.value)}
-                    rows={2}
-                    className="w-full bg-transparent text-sm text-gray-600 border-none focus:ring-0 p-0 resize-none"
-                    placeholder="Enter the purpose or standard instructions for this procedure..."
+        <div className="space-y-10">
+          {phaseGroups.map(({ g, originalIndex }, groupIndex) => (
+            <div key={groupIndex} className="space-y-4">
+              <div className="flex items-center justify-between bg-gray-100/50 p-3 rounded-xl border border-gray-200 group">
+                <div className="flex items-center space-x-3 flex-1">
+                  <div className="bg-gray-900 text-white text-[10px] font-black w-8 h-6 flex items-center justify-center rounded uppercase tracking-tighter shadow-sm">
+                    {activePhase === 'Planning' ? '1' : activePhase === 'Fieldwork' ? '2' : '3'}.{groupIndex + 1}
+                  </div>
+                  <input 
+                    value={g.title}
+                    onChange={(e) => updateGroupTitle(originalIndex, e.target.value)}
+                    className="flex-1 bg-transparent font-black text-gray-800 uppercase tracking-tight outline-none focus:ring-0 text-sm"
+                    placeholder="Group Title (e.g. Payroll)"
                   />
                 </div>
+                <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button onClick={() => moveGroup(originalIndex, 'up')} className="p-1.5 text-gray-400 hover:text-blue-600"><ArrowUp className="w-4 h-4" /></button>
+                  <button onClick={() => moveGroup(originalIndex, 'down')} className="p-1.5 text-gray-400 hover:text-blue-600"><ArrowDown className="w-4 h-4" /></button>
+                  <button onClick={() => removeGroup(originalIndex)} className="p-1.5 text-gray-400 hover:text-red-600 ml-2"><Trash2 className="w-4 h-4" /></button>
+                </div>
+              </div>
+
+              <div className="pl-6 space-y-4 border-l-2 border-gray-100 ml-4">
+                {g.procedures.map((p, pIndex) => (
+                  <div key={pIndex} className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-md transition-all group/proc">
+                    <div className="flex items-start gap-4">
+                      <div className="bg-blue-50 text-blue-700 text-[10px] font-black px-1.5 py-0.5 rounded mt-1">
+                        {groupIndex + 1}.{String.fromCharCode(97 + pIndex)}
+                      </div>
+                      <div className="flex-1 space-y-2">
+                        <input
+                          value={p.title}
+                          onChange={(e) => updateProcedure(originalIndex, pIndex, 'title', e.target.value)}
+                          className="w-full font-bold text-gray-900 outline-none border-none p-0 text-sm focus:ring-0"
+                          placeholder="Procedure Title..."
+                        />
+                        <textarea
+                          value={p.purpose || ''}
+                          onChange={(e) => updateProcedure(originalIndex, pIndex, 'purpose', e.target.value)}
+                          rows={2}
+                          className="w-full text-xs text-gray-500 outline-none border-none p-0 resize-none focus:ring-0 bg-transparent"
+                          placeholder="Purpose / Standard instructions..."
+                        />
+                      </div>
+                      <button onClick={() => removeProcedure(originalIndex, pIndex)} className="p-1.5 text-gray-300 hover:text-red-600 opacity-0 group-hover/proc:opacity-100"><Trash2 className="w-4 h-4" /></button>
+                    </div>
+                  </div>
+                ))}
                 <button
-                  onClick={() => removeProcedure(originalIndex)}
-                  className="p-2 text-gray-300 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => addProcedureToGroup(originalIndex)}
+                  className="flex items-center space-x-1.5 text-blue-600 hover:text-blue-800 text-[10px] font-black uppercase tracking-widest pl-4"
                 >
-                  <Trash2 className="w-4 h-4" />
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add Procedure to Group</span>
                 </button>
               </div>
             </div>
           ))}
 
-          {filteredProcedures.length === 0 && (
-            <div className="py-12 text-center border-2 border-dashed border-gray-100 rounded-xl">
-              <p className="text-gray-400 text-sm font-medium">No procedures defined for {activePhase} yet.</p>
-              <button onClick={addProcedure} className="mt-2 text-blue-600 font-bold hover:underline text-sm uppercase tracking-widest">
-                + Add First Step
+          {phaseGroups.length === 0 && (
+            <div className="py-20 text-center border-2 border-dashed border-gray-100 rounded-2xl">
+              <p className="text-gray-400 font-medium mb-4">No groups defined for {activePhase}.</p>
+              <button onClick={addGroup} className="bg-white border border-indigo-200 text-indigo-700 px-6 py-2 rounded-xl font-bold hover:bg-indigo-50 transition-all text-sm shadow-sm">
+                + Create First Group
               </button>
             </div>
           )}

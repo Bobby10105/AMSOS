@@ -120,20 +120,34 @@ model AuditTemplate {
   id          String              @id @default(uuid())
   name        String              @unique
   description String?
+  groups      TemplateGroup[]
   procedures  TemplateProcedure[]
   createdAt   DateTime            @default(now())
   updatedAt   DateTime            @updatedAt
 }
 
+model TemplateGroup {
+  id           String              @id @default(uuid())
+  templateId   String
+  phase        String              // Planning, Fieldwork, Reporting
+  title        String
+  displayOrder Int                 @default(0)
+  procedures   TemplateProcedure[]
+  
+  template     AuditTemplate       @relation(fields: [templateId], references: [id], onDelete: Cascade)
+}
+
 model TemplateProcedure {
-  id          String        @id @default(uuid())
-  templateId  String
-  phase       String        // Planning, Fieldwork, Reporting
-  title       String
-  purpose     String?
+  id           String        @id @default(uuid())
+  templateId   String
+  groupId      String?
+  phase        String        // Planning, Fieldwork, Reporting
+  title        String
+  purpose      String?
   displayOrder Int          @default(0)
   
-  template    AuditTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  template     AuditTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  group        TemplateGroup? @relation(fields: [groupId], references: [id], onDelete: Cascade)
 }
 
 model AuditLog {

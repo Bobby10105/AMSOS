@@ -4,25 +4,42 @@ import { getSession } from '@/lib/auth';
 
 export async function GET(req: Request, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
+  console.log(`[API/Templates/${params.id}] GET request received`);
   const session = await getSession();
   if (!session) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const template = await prisma.auditTemplate.findUnique({
-    where: { id: params.id },
-    include: {
-      procedures: {
-        orderBy: { displayOrder: 'asc' }
+  try {
+    const template = await prisma.auditTemplate.findUnique({
+      where: { id: params.id },
+      include: {
+        groups: {
+          orderBy: { displayOrder: 'asc' },
+          include: {
+            procedures: {
+              orderBy: { displayOrder: 'asc' }
+            }
+          }
+        },
+        procedures: {
+          where: { groupId: null },
+          orderBy: { displayOrder: 'asc' }
+        }
       }
+    });
+
+    if (!template) {
+      console.warn(`[API/Templates/${params.id}] Template not found`);
+      return NextResponse.json({ error: 'Template not found' }, { status: 404 });
     }
-  });
 
-  if (!template) {
-    return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+    console.log(`[API/Templates/${params.id}] Found template: ${template.name} with ${template.groups.length} groups`);
+    return NextResponse.json(template);
+  } catch (error: any) {
+    console.error(`[API/Templates/${params.id}] GET Error:`, error.message);
+    return NextResponse.json({ error: 'Internal Server Error', details: error.message }, { status: 500 });
   }
-
-  return NextResponse.json(template);
 }
 
 export async function PUT(req: Request, props: { params: Promise<{ id: string }> }) {
@@ -33,7 +50,7 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
   }
 
   try {
-    const { name, description, procedures } = await req.json();
+    const { name, description, groups } = await req.json();
 
     const result = await prisma.$transaction(async (tx) => {
       // Update template details
@@ -42,24 +59,34 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
         data: { name, description }
       });
 
-      // If procedures are provided, replace them all
-      if (procedures && Array.isArray(procedures)) {
-        // Delete existing procedures
-        await tx.templateProcedure.deleteMany({
-          where: { templateId: params.id }
-        });
+      // Clear existing structure
+      await tx.templateProcedure.deleteMany({ where: { templateId: params.id } });
+      await tx.templateGroup.deleteMany({ where: { templateId: params.id } });
 
-        // Create new ones
-        if (procedures.length > 0) {
-          await tx.templateProcedure.createMany({
-            data: procedures.map((p: any, index: number) => ({
+      // Create new groups and procedures
+      if (groups && Array.isArray(groups)) {
+        for (const [gIndex, g] of groups.entries()) {
+          const group = await tx.templateGroup.create({
+            data: {
               templateId: params.id,
-              phase: p.phase,
-              title: p.title,
-              purpose: p.purpose,
-              displayOrder: p.displayOrder ?? index
-            }))
+              phase: g.phase,
+              title: g.title,
+              displayOrder: gIndex
+            }
           });
+
+          if (g.procedures && Array.isArray(g.procedures)) {
+            await tx.templateProcedure.createMany({
+              data: g.procedures.map((p: any, pIndex: number) => ({
+                templateId: params.id,
+                groupId: group.id,
+                phase: g.phase,
+                title: p.title,
+                purpose: p.purpose,
+                displayOrder: pIndex
+              }))
+            });
+          }
         }
       }
 
@@ -71,13 +98,14 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
         action: 'UPDATE',
         entityType: 'TEMPLATE',
         entityId: params.id,
-        details: `Updated audit template: ${result.name}`,
+        details: `Updated audit template structure: ${result.name}`,
         performedBy: session.user.username,
       }
     });
 
     return NextResponse.json(result);
   } catch (error: any) {
+    console.error('Update template error:', error);
     return NextResponse.json({ error: 'Failed to update template', details: error.message }, { status: 500 });
   }
 }

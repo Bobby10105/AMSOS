@@ -18,33 +18,71 @@ export async function POST(req: Request, props: { params: Promise<{ id: string }
 
     const template = await prisma.auditTemplate.findUnique({
       where: { id: templateId },
-      include: { procedures: true }
+      include: { 
+        groups: {
+          include: { procedures: true }
+        },
+        procedures: {
+          where: { groupId: null }
+        }
+      }
     });
 
     if (!template) {
       return NextResponse.json({ error: 'Template not found' }, { status: 404 });
     }
 
-    // Filter procedures by phase if specified, otherwise take all
-    const proceduresToCopy = phase 
-      ? template.procedures.filter(p => p.phase === phase)
-      : template.procedures;
+    const createdProcedures: any[] = [];
 
-    if (proceduresToCopy.length === 0) {
-      return NextResponse.json({ message: 'No procedures found for the specified phase in this template' }, { status: 200 });
-    }
+    await prisma.$transaction(async (tx) => {
+      // 1. Process Groups
+      const templateGroups = phase 
+        ? template.groups.filter(g => g.phase === phase)
+        : template.groups;
 
-    const createdProcedures = await prisma.$transaction(
-      proceduresToCopy.map(p => prisma.procedure.create({
-        data: {
-          auditId: params.id,
-          phase: p.phase,
-          title: p.title,
-          purpose: p.purpose,
-          // Other fields will use defaults
-        }
-      }))
-    );
+      for (const tg of templateGroups) {
+        const group = await tx.procedureGroup.create({
+          data: {
+            auditId: params.id,
+            phase: tg.phase,
+            title: tg.title,
+            displayOrder: tg.displayOrder
+          }
+        });
+
+        const procs = await Promise.all(
+          tg.procedures.map(tp => tx.procedure.create({
+            data: {
+              auditId: params.id,
+              groupId: group.id,
+              phase: tp.phase,
+              title: tp.title,
+              purpose: tp.purpose
+            }
+          }))
+        );
+        createdProcedures.push(...procs);
+      }
+
+      // 2. Process Ungrouped Procedures
+      const ungroupedToCopy = phase 
+        ? template.procedures.filter(p => p.phase === phase)
+        : template.procedures;
+
+      if (ungroupedToCopy.length > 0) {
+        const procs = await Promise.all(
+          ungroupedToCopy.map(tp => tx.procedure.create({
+            data: {
+              auditId: params.id,
+              phase: tp.phase,
+              title: tp.title,
+              purpose: tp.purpose
+            }
+          }))
+        );
+        createdProcedures.push(...procs);
+      }
+    });
 
     await prisma.auditLog.create({
       data: {
