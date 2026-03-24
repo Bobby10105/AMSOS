@@ -42,14 +42,13 @@ export default async function RootLayout({
                 <nav className="hidden lg:flex items-center space-x-4">
                   {user.role?.toLowerCase().trim() === 'administrator' && (
                     <>
-                      <Link 
-                        href="/audit-logs" 
+                      <Link
+                        href="/audit-logs"
                         className="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors text-sm font-medium bg-blue-800/40 hover:bg-blue-800/60 px-3 py-2 rounded-lg"
                       >
                         <ClipboardList className="h-4 w-4" />
-                        <span>Audit Logs</span>
-                      </Link>
-                      <Link 
+                        <span>Logs</span>
+                      </Link>                      <Link 
                         href="/admin/users" 
                         className="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors text-sm font-medium bg-blue-800/40 hover:bg-blue-800/60 px-3 py-2 rounded-lg"
                       >

@@ -491,7 +491,7 @@ export default function ProcedureItem({
                         />
                       </div>
                       <div className="flex flex-col">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 tracking-wider">Review By</label>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 tracking-wider">Reviewed By</label>
                         <input
                           value={att.reviewedBy || ''}
                           onChange={(e) => handleAttachmentChange(att.id, 'reviewedBy', e.target.value)}
@@ -500,7 +500,7 @@ export default function ProcedureItem({
                         />
                       </div>
                       <div className="flex flex-col">
-                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 tracking-wider">Review Date</label>
+                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 tracking-wider">Reviewed Date</label>
                         <div className="flex items-center space-x-2">
                           <input
                             type="date"

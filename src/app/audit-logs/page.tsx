@@ -43,7 +43,7 @@ export default async function AuditLogsPage() {
             <Shield className="w-6 h-6 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Immutable Audit Logs</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Logs</h1>
             <p className="text-sm text-gray-500 font-medium">Tracking major system events for accountability</p>
           </div>
         </div>
