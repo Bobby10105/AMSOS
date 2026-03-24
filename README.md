@@ -13,8 +13,8 @@ This software was "vibe-coded" by a CPA with 10 years of audit experience who wa
 
 **Contributions are welcomed!** Whether you are an auditor with feature ideas or a developer looking to help, please feel free to open an issue or submit a pull request.
 
-![Procedure Grouping](docs/images/procedure_group.png)
-*Hierarchical Organization using Procedure Groups to categorize complex audit fieldwork into logical folders.*
+![Audit View](docs/images/audit_view.png)
+*Audit Detail View featuring milestone tracking, team member assignments, and phase-based procedure navigation.*
 
 ## 🚀 Key Features
 
@@ -32,11 +32,11 @@ This software was "vibe-coded" by a CPA with 10 years of audit experience who wa
 *   **Professional Export**: Generate a complete "Audit Program" in Word (.docx) format with one click.
 *   **Secure Access**: Built-in authentication with granular role-based access control and **Federal SSO (OIDC)** support.
 
-![Audit Status](docs/images/status.png)
-*Visual Status Tracking providing immediate insight into preparation and review progress across all procedures.*
+![Procedure Grouping](docs/images/procedure_group.png)
+*Hierarchical Organization using Procedure Groups to categorize complex audit fieldwork into logical folders.*
 
-![Audit View](docs/images/audit_view.png)
-*Audit Detail View featuring milestone tracking, team member assignments, and phase-based procedure navigation.*
+![Procedure View](docs/images/procedure_view.png)
+*Detailed Procedure Documentation including standardized fields for audit evidence and integrated sign-off tracking.*
 
 ## 🔐 Roles & Permissions (RBAC)
 
@@ -59,11 +59,11 @@ AMSOS uses a granular **Role-Based Access Control (RBAC)** model to ensure data 
 *   **Review Workflow**: While any role can be assigned to an audit, typically senior roles (Partner, Director, Manager) perform the final "Reviewed By" sign-off.
 *   **Audit Logs**: All sensitive actions (logins, deletions, user changes) are tracked in the system-wide Audit Logs for compliance.
 
-![Procedure View](docs/images/procedure_view.png)
-*Detailed Procedure Documentation including standardized fields for audit evidence and integrated sign-off tracking.*
-
 ![Detailed Sign-offs](docs/images/prepare_review_view.png)
 *Granular Control with individual "Prepared" and "Reviewed" sign-offs for every procedure and supporting attachment.*
+
+![Audit Status](docs/images/status.png)
+*Visual Status Tracking providing immediate insight into preparation and review progress across all procedures.*
 
 ## 🛠 Tech Stack
 
