@@ -76,6 +76,56 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
   }
 }
 
+export async function PATCH(req: Request, props: { params: Promise<{ id: string }> }) {
+  const session = await getSession();
+  const params = await props.params;
+  
+  try {
+    const data = await req.json();
+    
+    const updateData: any = {};
+    if (data.preparedBy !== undefined) updateData.preparedBy = data.preparedBy;
+    if (data.reviewedBy !== undefined) updateData.reviewedBy = data.reviewedBy;
+    
+    const parseDate = (val: string | null | undefined) => {
+      if (val === undefined) return undefined;
+      if (!val || val === '') return null;
+      const d = new Date(val);
+      if (isNaN(d.getTime())) return null;
+      return d;
+    };
+
+    if (data.preparedDate !== undefined) updateData.preparedDate = parseDate(data.preparedDate);
+    if (data.reviewedDate !== undefined) updateData.reviewedDate = parseDate(data.reviewedDate);
+
+    const updatedAttachment = await prisma.attachment.update({
+      where: { id: params.id },
+      data: updateData,
+      include: {
+        procedure: {
+          include: { audit: { select: { title: true } } }
+        }
+      }
+    });
+
+    // Log the action
+    await prisma.auditLog.create({
+      data: {
+        action: 'UPDATE',
+        entityType: 'ATTACHMENT',
+        entityId: params.id,
+        details: `Updated metadata for attachment: ${updatedAttachment.filename} in procedure: ${updatedAttachment.procedure.title}`,
+        performedBy: session?.user?.username || 'System',
+      }
+    });
+
+    return NextResponse.json(updatedAttachment);
+  } catch (error) {
+    console.error('Update attachment metadata error:', error);
+    return NextResponse.json({ error: 'Update failed' }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
   const session = await getSession();
   const params = await props.params;

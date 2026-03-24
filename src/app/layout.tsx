@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Link from 'next/link';
-import { FileText, ClipboardList, Users } from 'lucide-react';
+import { FileText, ClipboardList, Users, BookOpen } from 'lucide-react';
 import { getSession } from '@/lib/auth';
 import UserMenu from '@/components/UserMenu';
 
@@ -35,7 +35,7 @@ export default async function RootLayout({
               </Link>
 
               {user && (
-                <nav className="hidden md:flex items-center space-x-4">
+                <nav className="hidden lg:flex items-center space-x-4">
                   <Link 
                     href="/audit-logs" 
                     className="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors text-sm font-medium bg-blue-800/40 hover:bg-blue-800/60 px-3 py-2 rounded-lg"
@@ -43,13 +43,24 @@ export default async function RootLayout({
                     <ClipboardList className="h-4 w-4" />
                     <span>Audit Logs</span>
                   </Link>
-                  <Link 
-                    href="/admin/users" 
-                    className="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors text-sm font-medium bg-blue-800/40 hover:bg-blue-800/60 px-3 py-2 rounded-lg"
-                  >
-                    <Users className="h-4 w-4" />
-                    <span>User Directory</span>
-                  </Link>
+                  {user.role === 'Administrator' && (
+                    <>
+                      <Link 
+                        href="/admin/users" 
+                        className="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors text-sm font-medium bg-blue-800/40 hover:bg-blue-800/60 px-3 py-2 rounded-lg"
+                      >
+                        <Users className="h-4 w-4" />
+                        <span>User Directory</span>
+                      </Link>
+                      <Link 
+                        href="/admin/templates" 
+                        className="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors text-sm font-medium bg-blue-800/40 hover:bg-blue-800/60 px-3 py-2 rounded-lg"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        <span>Templates</span>
+                      </Link>
+                    </>
+                  )}
                 </nav>
               )}
             </div>

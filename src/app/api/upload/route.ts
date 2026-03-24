@@ -6,79 +6,194 @@ import path from 'path';
 import crypto from 'crypto';
 
 export async function POST(req: Request) {
+  console.log('[API/Upload] POST request received');
   try {
     const session = await getSession();
-    const formData = await req.formData();
-    const file = formData.get('file') as File;
-    const procedureId = formData.get('procedureId') as string;
+    
+    let formData: FormData;
+    try {
+      formData = await req.formData();
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      console.error('[API/Upload] FormData parse error:', msg);
+      return NextResponse.json({ error: 'Failed to parse form data', details: msg }, { status: 400 });
+    }
+    
+    const file = formData.get('file');
+    const procedureId = formData.get('procedureId')?.toString();
+    const auditId = formData.get('auditId')?.toString();
+    const type = formData.get('type')?.toString();
 
-    if (!file || !procedureId) {
-      return NextResponse.json({ error: 'File and procedureId are required' }, { status: 400 });
+    console.log('[API/Upload] Metadata:', { procedureId, auditId, type });
+
+    if (!file || typeof file === 'string') {
+      console.error('[API/Upload] No file found in request');
+      return NextResponse.json({ error: 'Valid file is required in form field "file"' }, { status: 400 });
     }
 
-    const buffer = Buffer.from(await file.arrayBuffer());
+    // Cast to unknown then any to get attributes safely
+    const fileAny = file as any;
+    const filenameAttr = fileAny.name || 'unknown_file';
+    console.log('[API/Upload] Processing file:', filenameAttr);
     
-    // Create uploads directory if it doesn't exist
+    // Clean up IDs
+    const cleanProcedureId = (procedureId === 'null' || procedureId === 'undefined' || !procedureId) ? undefined : procedureId;
+    const cleanAuditId = (auditId === 'null' || auditId === 'undefined' || !auditId) ? undefined : auditId;
+    const cleanType = type?.toLowerCase();
+
+    if (!cleanProcedureId && !cleanAuditId) {
+      console.error('[API/Upload] Missing IDs');
+      return NextResponse.json({ error: 'Either procedureId or auditId is required' }, { status: 400 });
+    }
+
+    let buffer: Buffer;
+    try {
+      const arrayBuffer = await fileAny.arrayBuffer();
+      buffer = Buffer.from(arrayBuffer);
+      console.log('[API/Upload] File buffer size:', buffer.length);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      console.error('[API/Upload] Buffer read error:', msg);
+      return NextResponse.json({ error: 'Failed to read uploaded file', details: msg }, { status: 500 });
+    }
+    
     const uploadDir = path.join(process.cwd(), 'public/uploads');
     try {
-      await fs.access(uploadDir);
-    } catch {
       await fs.mkdir(uploadDir, { recursive: true });
+    } catch (mkdirErr: unknown) {
+      const msg = mkdirErr instanceof Error ? mkdirErr.message : 'Unknown error';
+      console.error('[API/Upload] Directory creation error:', msg);
+      return NextResponse.json({ error: 'Failed to prepare upload directory', details: msg }, { status: 500 });
     }
 
     const uniqueSuffix = crypto.randomUUID();
-    const filename = `${uniqueSuffix}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    const filepath = path.join(uploadDir, filename);
+    const safeFilename = filenameAttr.replace(/[^a-zA-Z0-9.-]/g, '_');
+    const diskFilename = `${uniqueSuffix}-${safeFilename}`;
+    const filepath = path.join(uploadDir, diskFilename);
 
-    await fs.writeFile(filepath, buffer);
+    try {
+      await fs.writeFile(filepath, buffer);
+      console.log('[API/Upload] File saved to:', filepath);
+    } catch (writeErr: unknown) {
+      const msg = writeErr instanceof Error ? writeErr.message : 'Unknown error';
+      console.error('[API/Upload] File write failure:', msg);
+      return NextResponse.json({ error: 'Failed to write file to disk', details: msg }, { status: 500 });
+    }
 
-    // Bypassing Prisma validation with raw query for displayOrder calculation
-    const rawResult = await prisma.$queryRawUnsafe<{ maxOrder: any }[]>(
-      `SELECT MAX(displayOrder) as maxOrder FROM Attachment WHERE procedureId = ?`,
-      procedureId
-    );
-    
-    const nextOrder = Number(rawResult[0]?.maxOrder || 0) + 1;
+    // MILESTONE ATTACHMENT PATH
+    if (cleanAuditId && cleanType === 'milestone') {
+      console.log('[API/Upload] Updating milestone for audit:', cleanAuditId);
+      try {
+        const audit = await prisma.audit.findUnique({
+          where: { id: cleanAuditId },
+          select: { id: true, milestoneAttachmentUrl: true, title: true }
+        });
 
-    // Use raw execute to avoid validation error on the field name
-    const attachmentId = crypto.randomUUID();
-    await prisma.$executeRawUnsafe(
-      `INSERT INTO Attachment (id, procedureId, filename, filepath, mimetype, size, displayOrder, createdAt)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      attachmentId,
-      procedureId,
-      file.name,
-      `/uploads/${filename}`,
-      file.type,
-      file.size,
-      nextOrder,
-      new Date().toISOString()
-    );
+        if (!audit) {
+          console.error('[API/Upload] Audit not found:', cleanAuditId);
+          return NextResponse.json({ error: 'Audit not found in database' }, { status: 404 });
+        }
 
-    // Fetch the created record using standard prisma (which should work for basic select if it matches ID)
-    const attachment = await prisma.attachment.findUnique({
-      where: { id: attachmentId }
-    });
+        // Cleanup old file
+        if (audit.milestoneAttachmentUrl) {
+          const oldPath = path.join(process.cwd(), 'public', audit.milestoneAttachmentUrl);
+          try {
+            await fs.unlink(oldPath);
+            console.log('[API/Upload] Cleaned up old file:', oldPath);
+          } catch (e) {}
+        }
 
-    const procedure = await prisma.procedure.findUnique({
-      where: { id: procedureId },
-      include: { audit: { select: { title: true } } }
-    });
+        const updatedAudit = await prisma.audit.update({
+          where: { id: cleanAuditId },
+          data: {
+            milestoneAttachmentUrl: `/uploads/${diskFilename}`,
+            milestoneAttachmentName: filenameAttr,
+          }
+        });
 
-    // Log the action
-    await prisma.auditLog.create({
-      data: {
-        action: 'CREATE',
-        entityType: 'ATTACHMENT',
-        entityId: attachmentId,
-        details: `Uploaded attachment: ${file.name} to procedure: ${procedure?.title} in audit: ${procedure?.audit?.title}`,
-        performedBy: session?.user?.username || 'System',
+        try {
+          await prisma.auditLog.create({
+            data: {
+              action: 'UPDATE',
+              entityType: 'AUDIT',
+              entityId: cleanAuditId,
+              details: `Uploaded milestone spreadsheet: ${filenameAttr}`,
+              performedBy: session?.user?.username || 'System',
+            }
+          });
+        } catch (logError) {
+          console.error('[API/Upload] Log creation failed:', logError);
+        }
+
+        console.log('[API/Upload] Milestone success');
+        return NextResponse.json(updatedAudit);
+      } catch (dbError: unknown) {
+        const msg = dbError instanceof Error ? dbError.message : 'Unknown database error';
+        console.error('[API/Upload] DB error:', msg);
+        return NextResponse.json({ error: 'Database update failed', details: msg }, { status: 500 });
       }
-    });
+    }
 
-    return NextResponse.json(attachment);
-  } catch (error: any) {
-    console.error('Upload error:', error);
-    return NextResponse.json({ error: 'Upload failed', details: error.message }, { status: 500 });
+    // REGULAR PROCEDURE ATTACHMENT PATH
+    if (!cleanProcedureId) {
+      console.error('[API/Upload] No procedureId for regular attachment');
+      return NextResponse.json({ error: 'procedureId is required' }, { status: 400 });
+    }
+
+    console.log('[API/Upload] Updating procedure attachment:', cleanProcedureId);
+    try {
+      const rawResult = await prisma.$queryRawUnsafe<{ maxOrder: bigint }[]>(
+        `SELECT MAX(displayOrder) as maxOrder FROM Attachment WHERE procedureId = ?`,
+        cleanProcedureId
+      );
+      
+      const nextOrder = Number(rawResult[0]?.maxOrder || 0) + 1;
+      const attachmentId = crypto.randomUUID();
+
+      await prisma.$executeRawUnsafe(
+        `INSERT INTO Attachment (id, procedureId, filename, filepath, mimetype, size, displayOrder, createdAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        attachmentId,
+        cleanProcedureId,
+        filenameAttr,
+        `/uploads/${diskFilename}`,
+        fileAny.type || 'application/octet-stream',
+        fileAny.size || 0,
+        nextOrder,
+        new Date().toISOString()
+      );
+
+      const attachment = await prisma.attachment.findUnique({
+        where: { id: attachmentId }
+      });
+
+      try {
+        const procedure = await prisma.procedure.findUnique({
+          where: { id: cleanProcedureId },
+          include: { audit: { select: { title: true } } }
+        });
+
+        await prisma.auditLog.create({
+          data: {
+            action: 'CREATE',
+            entityType: 'ATTACHMENT',
+            entityId: attachmentId,
+            details: `Uploaded attachment: ${filenameAttr} to procedure: ${procedure?.title}`,
+            performedBy: session?.user?.username || 'System',
+          }
+        });
+      } catch (e) {}
+
+      console.log('[API/Upload] Attachment success');
+      return NextResponse.json(attachment);
+    } catch (dbError: unknown) {
+      const msg = dbError instanceof Error ? dbError.message : 'Unknown database error';
+      console.error('[API/Upload] DB error:', msg);
+      return NextResponse.json({ error: 'Database insertion failed', details: msg }, { status: 500 });
+    }
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[API/Upload] Critical error:', msg);
+    return NextResponse.json({ error: 'Internal server error', details: msg }, { status: 500 });
   }
 }

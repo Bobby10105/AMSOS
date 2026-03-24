@@ -17,8 +17,23 @@ export async function GET(req: Request, props: { params: Promise<{ id: string }>
     where: { id: params.id },
     include: {
       teamMembers: true,
+      procedureGroups: {
+        orderBy: { displayOrder: 'asc' },
+        include: {
+          procedures: {
+            include: { 
+              attachments: { orderBy: { displayOrder: 'asc' } },
+              messages: { orderBy: { createdAt: 'asc' } }
+            }
+          }
+        }
+      },
       procedures: {
-        include: { attachments: true }
+        where: { groupId: null }, // Include ungrouped ones too just in case
+        include: { 
+          attachments: { orderBy: { displayOrder: 'asc' } },
+          messages: { orderBy: { createdAt: 'asc' } }
+        }
       }
     }
   });
@@ -50,7 +65,24 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
     if (data.reportIssuedDate !== undefined) updateData.reportIssuedDate = parseDate(data.reportIssuedDate);
     
     if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
     if (data.objective !== undefined) updateData.objective = data.objective;
+    if (data.status !== undefined) updateData.status = data.status;
+
+    if (data.milestoneAttachmentUrl === null) {
+      // Delete existing file if any
+      const currentAudit = await prisma.audit.findUnique({ where: { id: params.id } });
+      if (currentAudit?.milestoneAttachmentUrl) {
+        const fullPath = path.join(process.cwd(), 'public', currentAudit.milestoneAttachmentUrl);
+        try {
+          await fs.unlink(fullPath);
+        } catch (e) {
+          console.warn("Could not delete milestone attachment file:", e);
+        }
+      }
+      updateData.milestoneAttachmentUrl = null;
+      updateData.milestoneAttachmentName = null;
+    }
 
     const audit = await prisma.audit.update({
       where: { id: params.id },
@@ -101,6 +133,13 @@ export async function DELETE(req: Request, props: { params: Promise<{ id: string
 
     if (audit) {
       const publicDir = path.join(process.cwd(), 'public');
+      
+      // Delete milestone attachment if exists
+      if (audit.milestoneAttachmentUrl) {
+        const milestonePath = path.join(publicDir, audit.milestoneAttachmentUrl);
+        try { await fs.unlink(milestonePath); } catch (e) {}
+      }
+
       for (const procedure of audit.procedures) {
         for (const attachment of procedure.attachments) {
           const fullPath = path.join(publicDir, attachment.filepath);

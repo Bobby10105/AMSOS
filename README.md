@@ -7,7 +7,7 @@ AMSOS is a simple, modern, and open-source web application designed for auditors
 
 ## 🌟 Background & Mission
 
-The purpose of this project is to provide free, open-source audit management software to audit offices worldwide. 
+The purpose of this project is to provide free, open-source audit management software to audit offices. 
 
 This software was "vibe-coded" by a CPA with 10 years of audit experience who was looking for a free, open-source alternative to expensive proprietary solutions. We believe that high-quality audit tools should be accessible to every auditor, regardless of budget.
 
@@ -15,13 +15,17 @@ This software was "vibe-coded" by a CPA with 10 years of audit experience who wa
 
 ## 🚀 Key Features
 
-*   **Project Dashboard**: Overview of all active and completed audits.
+*   **Project Dashboard**: Overview of all active audits with a dedicated **Completed Archival** section for finished projects.
 *   **Three-Phase Workflow**: Standardized sections for Planning, Fieldwork, and Reporting.
+*   **Audit Program Templates**: Create and manage a library of standard audit programs. Instantly import sets of procedures and purposes into any phase to standardize documentation and save time.
+*   **Hierarchical Organization**: Organize procedures into **Procedure Groups** (e.g., "Payroll", "Revenue"). 
+*   **Smart Numbering**: Automatic professional nomenclature (Groups: **1.1**, Procedures: **1.1.a**, Attachments: **1.1.a.1**).
 *   **Comprehensive Documentation**: Each procedure tracks Purpose, Source, Scope, Methodology, Results, Conclusions, and **Reviewer Comments**.
 *   **Audit Sign-offs**: "Prepared By" and "Reviewed By" tracking with dates and visual status badges (Green for Prepared, Blue for Reviewed).
-*   **Milestone Tracking**: Monitor key project dates (Planning, Fieldwork Start/End, Report Issued).
+*   **Attachment Support**: Attach PDF, Word, Excel, and PowerPoint documents directly to specific procedures. 
+*   **Attachment Review**: Each individual attachment now supports its own "Prepared By" and "Reviewed By" sign-offs for granular quality control.
+*   **Milestone Tracking**: Monitor key project dates and **attach a detailed milestones spreadsheet** for granular project management.
 *   **Team Management**: Document audit team members, roles, and contact information.
-*   **Attachment Support**: Attach PDF, Word, Excel, and PowerPoint documents directly to specific procedures.
 *   **Professional Export**: Generate a complete "Audit Program" in Word (.docx) format with one click.
 *   **Secure Access**: Built-in authentication with granular role-based access control and **Federal SSO (OIDC)** support.
 

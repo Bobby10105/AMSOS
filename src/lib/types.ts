@@ -1,11 +1,16 @@
-import type { Audit, Procedure, Attachment, TeamMember, ProcedureMessage } from '@prisma/client';
+import type { Audit, Procedure, Attachment, TeamMember, ProcedureMessage, ProcedureGroup } from '@prisma/client';
 
 export type ProcedureWithRelations = Procedure & { 
   attachments: Attachment[],
   messages: ProcedureMessage[]
 };
 
+export type ProcedureGroupWithRelations = ProcedureGroup & {
+  procedures: ProcedureWithRelations[]
+};
+
 export type AuditWithRelations = Audit & { 
   procedures: ProcedureWithRelations[],
+  procedureGroups: ProcedureGroupWithRelations[],
   teamMembers: TeamMember[] 
 };

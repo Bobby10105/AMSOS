@@ -62,8 +62,8 @@ export default function AuditTabs({
             key={activePhase}
             auditId={audit.id} 
             phase={activePhase} 
-            initialProcedures={audit.procedures.filter(p => p.phase === activePhase)} 
-            user={user}
+            audit={audit}
+            user={user as any}
           />
         )}
       </div>

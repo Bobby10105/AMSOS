@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Trash2, Save, Paperclip, File as FileIcon, X, ChevronDown, ChevronRight, MessageSquare, RefreshCw, Send, User } from 'lucide-react';
+import { Trash2, Save, Paperclip, File as FileIcon, X, ChevronDown, ChevronRight, MessageSquare, RefreshCw, Send, User, CheckCircle, Clock } from 'lucide-react';
 import type { Attachment, ProcedureMessage } from '@prisma/client';
 import type { ProcedureWithRelations } from '@/lib/types';
 
@@ -15,7 +15,7 @@ export default function ProcedureItem({
   procedure: ProcedureWithRelations, 
   nomenclature: string, 
   onDelete: () => void,
-  user?: { username: string; role: string }
+  user?: { username: string; role: string; id: string }
 }) {
   const formatDateForInput = (date: Date | null | undefined) => {
     if (!date) return '';
@@ -37,6 +37,7 @@ export default function ProcedureItem({
   const [isExpanded, setIsExpanded] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [savingAttachmentId, setSavingAttachmentId] = useState<string | null>(null);
   
   const replaceInputRef = useRef<HTMLInputElement>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
@@ -57,11 +58,9 @@ export default function ProcedureItem({
     setData({ ...data, [e.target.name]: e.target.value });
   };
 
-  const handleSave = async (e?: React.MouseEvent) => {
-    e?.stopPropagation();
+  const handleSave = async () => {
     setSaving(true);
     
-    // Explicitly pick fields to send (excluding messages and attachments)
     const payload = {
       title: data.title,
       purpose: data.purpose,
@@ -90,6 +89,41 @@ export default function ProcedureItem({
       }
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAttachmentChange = (id: string, name: string, value: string) => {
+    setAttachments(attachments.map(att => {
+      if (att.id === id) {
+        return { ...att, [name]: value };
+      }
+      return att;
+    }));
+  };
+
+  const handleSaveAttachmentMetadata = async (att: Attachment) => {
+    setSavingAttachmentId(att.id);
+    try {
+      const res = await fetch(`/api/attachments/${att.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          preparedBy: att.preparedBy,
+          preparedDate: att.preparedDate,
+          reviewedBy: att.reviewedBy,
+          reviewedDate: att.reviewedDate,
+        }),
+      });
+
+      if (res.ok) {
+        router.refresh();
+      } else {
+        alert('Failed to save attachment details');
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setSavingAttachmentId(null);
     }
   };
 
@@ -178,6 +212,7 @@ export default function ProcedureItem({
   };
 
   const handleDeleteAttachment = async (id: string) => {
+    if (!confirm('Delete this attachment?')) return;
     try {
       const res = await fetch(`/api/attachments/${id}`, {
         method: 'DELETE',
@@ -216,7 +251,7 @@ export default function ProcedureItem({
   if (isReviewed) {
     statusColor = 'border-blue-200 bg-blue-50/10';
     headerColor = 'bg-blue-50 border-blue-200 hover:bg-blue-100';
-    statusBadge = <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-600 text-white uppercase tracking-wider">Reviewed</span>;
+    statusBadge = <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-600 text-white uppercase tracking-wider flex items-center">Reviewed</span>;
   } else if (isPrepared) {
     statusColor = 'border-green-200 bg-green-50/10';
     headerColor = 'bg-green-50 border-green-200 hover:bg-green-100';
@@ -247,7 +282,7 @@ export default function ProcedureItem({
         <div className="flex items-center space-x-2">
           {saving && <span className="text-xs text-blue-600 animate-pulse font-medium">Saving...</span>}
           <button 
-            onClick={handleSave} 
+            onClick={(e) => { e.stopPropagation(); handleSave(); }} 
             disabled={saving}
             className="flex items-center space-x-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 disabled:opacity-50"
           >
@@ -268,7 +303,7 @@ export default function ProcedureItem({
       
       {isExpanded && (
         <div className="p-6 space-y-6">
-          <div className="space-y-6">
+          <div className="space-y-6 text-gray-800">
             {fields.map(field => (
               <div key={field.name} className="flex flex-col">
                 <label className="text-sm font-bold text-gray-700 mb-2 tracking-wide uppercase">{field.label}</label>
@@ -284,7 +319,6 @@ export default function ProcedureItem({
             ))}
           </div>
 
-          {/* Review Comments Section - After Conclusions */}
           <div className="pt-6 border-t border-gray-100">
             <h4 className="text-sm font-bold text-gray-700 mb-4 flex items-center tracking-wide uppercase">
               <MessageSquare className="w-4 h-4 mr-2 text-blue-500" />
@@ -386,43 +420,108 @@ export default function ProcedureItem({
               Attachments
             </h4>
             
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 mb-4">
-              {attachments.length === 0 && <p className="text-sm text-gray-500 italic col-span-full">No documents attached yet.</p>}
-              {attachments.map((att, index) => (
-                <div key={att.id} className="flex flex-col bg-gray-50 p-3 border border-gray-200 rounded-lg group hover:bg-white transition-colors">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center min-w-0 flex-1">
-                      <span className="text-[10px] font-bold text-gray-400 bg-gray-200/50 px-1.5 py-0.5 rounded mr-2 flex-shrink-0">
-                        {nomenclature}.{(att as any).displayOrder || (index + 1)}
-                      </span>
-                      <a href={att.filepath} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm text-blue-700 hover:text-blue-900 truncate pr-2">
-                        <FileIcon className="w-4 h-4 mr-2 flex-shrink-0" />
-                        <span className="truncate">{att.filename}</span>
-                      </a>
+            <div className="space-y-4 mb-4">
+              {attachments.length === 0 && <p className="text-sm text-gray-500 italic">No documents attached yet.</p>}
+              {attachments.map((att, index) => {
+                const isAttReviewed = att.reviewedBy && att.reviewedDate;
+                const isAttPrepared = att.preparedBy && att.preparedDate;
+                
+                return (
+                  <div key={att.id} className={`flex flex-col bg-white border rounded-xl shadow-sm transition-all overflow-hidden ${
+                    isAttReviewed ? 'border-blue-200' : isAttPrepared ? 'border-green-200' : 'border-gray-200'
+                  }`}>
+                    {/* Attachment Header */}
+                    <div className={`px-4 py-3 border-b flex items-center justify-between ${
+                      isAttReviewed ? 'bg-blue-50/50' : isAttPrepared ? 'bg-green-50/50' : 'bg-gray-50'
+                    }`}>
+                      <div className="flex items-center min-w-0 flex-1">
+                        <span className="text-xs font-bold text-gray-400 bg-gray-200/50 px-2 py-0.5 rounded mr-3 flex-shrink-0">
+                          {nomenclature}.{index + 1}
+                        </span>
+                        <a href={att.filepath} target="_blank" rel="noopener noreferrer" className="flex items-center text-sm font-semibold text-blue-700 hover:text-blue-900 truncate">
+                          <FileIcon className="w-4 h-4 mr-2 flex-shrink-0" />
+                          <span className="truncate">{att.filename}</span>
+                        </a>
+                        <div className="ml-4 flex items-center space-x-2">
+                          {isAttReviewed ? (
+                            <span className="flex items-center text-[10px] font-bold text-blue-700 uppercase"><CheckCircle className="w-3 h-3 mr-1" /> Reviewed</span>
+                          ) : isAttPrepared ? (
+                            <span className="flex items-center text-[10px] font-bold text-green-700 uppercase"><CheckCircle className="w-3 h-3 mr-1" /> Prepared</span>
+                          ) : (
+                            <span className="flex items-center text-[10px] font-bold text-gray-400 uppercase"><Clock className="w-3 h-3 mr-1" /> Pending</span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <button 
+                          onClick={() => handleReplaceClick(att.id)}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          title="Replace File"
+                        >
+                          <RefreshCw className="w-4 h-4" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteAttachment(att.id)} 
+                          className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete File"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={() => handleReplaceClick(att.id)}
-                        className="p-1 text-gray-400 hover:text-blue-600 transition-colors"
-                        title="Replace File"
-                      >
-                        <RefreshCw className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteAttachment(att.id)} 
-                        className="p-1 text-gray-400 hover:text-red-500 transition-colors"
-                        title="Delete File"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+
+                    {/* Attachment Metadata Grid */}
+                    <div className="p-4 bg-white grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                      <div className="flex flex-col">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 tracking-wider">Prepared By</label>
+                        <input
+                          value={att.preparedBy || ''}
+                          onChange={(e) => handleAttachmentChange(att.id, 'preparedBy', e.target.value)}
+                          className="text-xs px-2 py-1.5 border border-gray-200 rounded bg-gray-50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none"
+                          placeholder="Initials/Name"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 tracking-wider">Prepared Date</label>
+                        <input
+                          type="date"
+                          value={formatDateForInput(att.preparedDate)}
+                          onChange={(e) => handleAttachmentChange(att.id, 'preparedDate', e.target.value)}
+                          className="text-xs px-2 py-1.5 border border-gray-200 rounded bg-gray-50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 tracking-wider">Review By</label>
+                        <input
+                          value={att.reviewedBy || ''}
+                          onChange={(e) => handleAttachmentChange(att.id, 'reviewedBy', e.target.value)}
+                          className="text-xs px-2 py-1.5 border border-gray-200 rounded bg-gray-50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none"
+                          placeholder="Initials/Name"
+                        />
+                      </div>
+                      <div className="flex flex-col">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 tracking-wider">Review Date</label>
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="date"
+                            value={formatDateForInput(att.reviewedDate)}
+                            onChange={(e) => handleAttachmentChange(att.id, 'reviewedDate', e.target.value)}
+                            className="flex-1 text-xs px-2 py-1.5 border border-gray-200 rounded bg-gray-50 focus:bg-white focus:ring-1 focus:ring-blue-500 outline-none"
+                          />
+                          <button
+                            onClick={() => handleSaveAttachmentMetadata(att)}
+                            disabled={savingAttachmentId === att.id}
+                            className="p-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 transition-colors shadow-sm"
+                            title="Save Details"
+                          >
+                            {savingAttachmentId === att.id ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                  <div className="text-[10px] text-gray-400 flex justify-between items-center">
-                    <span>{(att.size ? (att.size / 1024).toFixed(1) : 0)} KB</span>
-                    <span>{new Date(att.createdAt).toLocaleDateString()}</span>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="flex">

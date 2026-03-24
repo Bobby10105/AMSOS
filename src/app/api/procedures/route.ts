@@ -8,6 +8,7 @@ export async function POST(req: Request) {
   const procedure = await prisma.procedure.create({
     data: {
       auditId: data.auditId,
+      groupId: data.groupId,
       phase: data.phase,
       title: data.title || 'New Procedure',
       purpose: data.purpose,

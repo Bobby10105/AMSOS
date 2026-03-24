@@ -46,7 +46,12 @@ export default async function AuditDetail(props: { params: Promise<{ id: string 
       }
     }
 
-    // 2. Fetch Procedures with RAW logic to avoid schema mismatch errors
+    // 2. Fetch Groups and Procedures with RAW logic to avoid schema mismatch errors
+    const rawGroups: any[] = await prisma.$queryRawUnsafe(
+      `SELECT * FROM ProcedureGroup WHERE auditId = ? ORDER BY displayOrder ASC`,
+      audit.id
+    );
+
     const rawProcedures: any[] = await prisma.$queryRawUnsafe(
       `SELECT * FROM Procedure WHERE auditId = ?`,
       audit.id
@@ -71,9 +76,16 @@ export default async function AuditDetail(props: { params: Promise<{ id: string 
       };
     }));
 
+    // 4. Map procedures to groups
+    const groupsWithProcedures = rawGroups.map(group => ({
+      ...group,
+      procedures: proceduresWithRelations.filter(p => p.groupId === group.id)
+    }));
+
     const finalAuditData = {
       ...audit,
-      procedures: proceduresWithRelations
+      procedureGroups: groupsWithProcedures,
+      procedures: proceduresWithRelations // Keep all for backward compatibility if needed
     };
 
     return (
