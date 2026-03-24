@@ -13,6 +13,9 @@ This software was "vibe-coded" by a CPA with 10 years of audit experience who wa
 
 **Contributions are welcomed!** Whether you are an auditor with feature ideas or a developer looking to help, please feel free to open an issue or submit a pull request.
 
+![Procedure Grouping](docs/images/procedure_group.png)
+*Hierarchical Organization using Procedure Groups to categorize complex audit fieldwork into logical folders.*
+
 ## 🚀 Key Features
 
 *   **Project Dashboard**: Overview of all active audits with a dedicated **Completed Archival** section for finished projects.
@@ -21,13 +24,16 @@ This software was "vibe-coded" by a CPA with 10 years of audit experience who wa
 *   **Hierarchical Organization**: Organize procedures into **Procedure Groups** (e.g., "Payroll", "Revenue"). 
 *   **Smart Numbering**: Automatic professional nomenclature (Groups: **1.1**, Procedures: **1.1.a**, Attachments: **1.1.a.1**).
 *   **Comprehensive Documentation**: Each procedure tracks Purpose, Source, Scope, Methodology, Results, Conclusions, and **Reviewer Comments**.
-*   **Audit Sign-offs**: "Prepared By" and "Reviewed By" tracking with dates and visual status badges (Green for Prepared, Blue for Reviewed).
+*   **Audit Sign-offs**: "Prepared By" and "Reviewed By" tracking with dates and visual status badges.
 *   **Attachment Support**: Attach PDF, Word, Excel, and PowerPoint documents directly to specific procedures. 
 *   **Attachment Review**: Each individual attachment now supports its own "Prepared By" and "Reviewed By" sign-offs for granular quality control.
 *   **Milestone Tracking**: Monitor key project dates and **attach a detailed milestones spreadsheet** for granular project management.
 *   **Team Management**: Document audit team members, roles, and contact information.
 *   **Professional Export**: Generate a complete "Audit Program" in Word (.docx) format with one click.
 *   **Secure Access**: Built-in authentication with granular role-based access control and **Federal SSO (OIDC)** support.
+
+![Audit Status](docs/images/status.png)
+*Visual Status Tracking providing immediate insight into preparation and review progress across all procedures.*
 
 ![Audit View](docs/images/audit_view.png)
 *Audit Detail View featuring milestone tracking, team member assignments, and phase-based procedure navigation.*
@@ -56,6 +62,9 @@ AMSOS uses a granular **Role-Based Access Control (RBAC)** model to ensure data 
 ![Procedure View](docs/images/procedure_view.png)
 *Detailed Procedure Documentation including standardized fields for audit evidence and integrated sign-off tracking.*
 
+![Detailed Sign-offs](docs/images/prepare_review_view.png)
+*Granular Control with individual "Prepared" and "Reviewed" sign-offs for every procedure and supporting attachment.*
+
 ## 🛠 Tech Stack
 
 *   **Framework**: [Next.js](https://nextjs.org/) (React)
@@ -64,7 +73,7 @@ AMSOS uses a granular **Role-Based Access Control (RBAC)** model to ensure data 
 *   **Auth**: JWT-based session management + OpenID Connect (OIDC)
 *   **Export**: docx.js
 
-![Comments and Attachments](docs/images/comment_attachment_view.png)
+![Comments and Attachments](docs/images/review_comments.png)
 *Reviewer Collaboration Tools featuring real-time comments and secure file attachments for comprehensive workpaper support.*
 
 ## 💻 Installation & Setup
