@@ -94,7 +94,7 @@ npm install
 # Create the database and sync the schema
 npx prisma db push
 
-# Create the initial admin user (admin / admin)
+# Create the initial admin user
 npx prisma db seed
 ```
 
@@ -102,6 +102,8 @@ npx prisma db seed
 Create a `.env` file in the root directory:
 ```env
 DATABASE_URL="file:./dev.db"
+
+# MANDATORY: Change this to a random secure string for production
 JWT_SECRET="your-secure-secret-key"
 
 # (Optional) Federal SSO Configuration (OIDC)
@@ -111,7 +113,15 @@ SSO_ISSUER_URL="https://idp.agency.gov"
 NEXT_PUBLIC_BASE_URL="https://your-app-url.gov"
 ```
 
-### 4. Run the Application
+### 4. Initial Login
+Once the application is running (see step 5), use the following default credentials to sign in and begin setup:
+
+*   **Username**: `admin`
+*   **Password**: `admin`
+
+**⚠️ Security Note:** Immediately after logging in, navigate to the **User Directory** to create your own administrative account and delete the default `admin` user, or change the default password via the profile menu.
+
+### 5. Run the Application
 ```bash
 # Start development server
 npm run dev
