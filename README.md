@@ -90,7 +90,30 @@ cd AMSOS
 
 # Install dependencies
 npm install
+```
 
+### 3. Environment Configuration
+Prisma requires a `DATABASE_URL` to be defined before creating the database. You can quickly create a `.env` file with the following command:
+
+```bash
+cat << 'EOF' > .env
+DATABASE_URL="file:./dev.db"
+
+# MANDATORY: Change this to a random secure string for production
+JWT_SECRET="your-secure-secret-key"
+
+# (Optional) Federal SSO Configuration (OIDC)
+# SSO_CLIENT_ID="your-client-id"
+# SSO_CLIENT_SECRET="your-client-secret"
+# SSO_ISSUER_URL="https://idp.agency.gov"
+# NEXT_PUBLIC_BASE_URL="https://your-app-url.gov"
+EOF
+```
+
+### 4. Database Creation & Seeding
+Once the `.env` file is ready, run the following to initialize your workspace:
+
+```bash
 # Create the database and sync the schema
 npx prisma db push
 
@@ -98,30 +121,15 @@ npx prisma db push
 npx prisma db seed
 ```
 
-### 3. Environment Configuration
-Create a `.env` file in the root directory:
-```env
-DATABASE_URL="file:./dev.db"
-
-# MANDATORY: Change this to a random secure string for production
-JWT_SECRET="your-secure-secret-key"
-
-# (Optional) Federal SSO Configuration (OIDC)
-SSO_CLIENT_ID="your-client-id"
-SSO_CLIENT_SECRET="your-client-secret"
-SSO_ISSUER_URL="https://idp.agency.gov"
-NEXT_PUBLIC_BASE_URL="https://your-app-url.gov"
-```
-
-### 4. Initial Login
-Once the application is running (see step 5), use the following default credentials to sign in and begin setup:
+### 5. Initial Login
+Once the application is running (see step 6), use the following default credentials to sign in and begin setup:
 
 *   **Username**: `admin`
 *   **Password**: `admin`
 
 **⚠️ Security Note:** Immediately after logging in, navigate to the **User Directory** to create your own administrative account and delete the default `admin` user, or change the default password via the profile menu.
 
-### 5. Run the Application
+### 6. Run the Application
 ```bash
 # Start development server
 npm run dev
