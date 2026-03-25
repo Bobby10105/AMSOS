@@ -154,8 +154,13 @@ npm install -g pm2
 # Start the application
 pm2 start npm --name "amsos" -- start
 
-# Ensure it starts on system reboot
+# Save the current process list
 pm2 save
+
+# ⚠️ Setup Automatic Reboot (Crucial Step)
+# Running 'pm2 startup' will generate a specific command.
+# You MUST copy that entire line from your terminal, paste it, and run it 
+# (it will look like: sudo env PATH=$PATH:/home/user/bin /usr/lib/node_modules/pm2/bin/pm2 startup ...)
 pm2 startup
 ```
 
