@@ -6,6 +6,10 @@ set -e
 echo "Running database migrations (Prisma 6)..."
 npx prisma@6 migrate deploy
 
+# Seed the database with initial admin user if needed
+echo "Seeding database..."
+npx prisma@6 db seed
+
 # Start the application
 echo "Starting AMSOS..."
 exec node server.js
