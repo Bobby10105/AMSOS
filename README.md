@@ -110,7 +110,7 @@ docker run -d \
 # docker logs amsos
 ```
 
-#### 2. Persistence Note
+#### Persistence Note
 The `-v` flags ensure your audit data and file attachments are stored outside the container, allowing you to update the app without losing data.
 
 ---
@@ -174,16 +174,6 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
----
-
-### 🔑 Initial Login
-Once the application is running (via Docker or Node.js), use the following default credentials to sign in:
-
-*   **Username**: `admin`
-*   **Password**: `admin`
-
-**⚠️ Security Note:** Immediately after logging in, navigate to the **User Directory** to create your own administrative account and delete the default `admin` user, or change the default password via the profile menu.
-
 ### Server Deployment (Production)
 
 For a stable, 24/7 server setup, follow these production-ready steps:
@@ -215,7 +205,17 @@ pm2 save
 pm2 startup
 ```
 
-#### Reverse Proxy (Nginx)
+---
+
+### 🔑 Initial Login
+Once the application is running (via Docker or Node.js), use the following default credentials to sign in:
+
+*   **Username**: `admin`
+*   **Password**: `admin`
+
+**⚠️ Security Note:** Immediately after logging in, navigate to the **User Directory** to create your own administrative account and delete the default `admin` user, or change the default password via the profile menu.
+
+#### 🔒 Reverse Proxy (Nginx)
 For public access and SSL (HTTPS), use Nginx as a reverse proxy on port 80/443. A sample configuration:
 ```nginx
 server {
