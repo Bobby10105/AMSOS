@@ -78,11 +78,53 @@ AMSOS uses a granular **Role-Based Access Control (RBAC)** model to ensure data 
 
 ## 💻 Installation & Setup
 
-### 1. Prerequisites
+### 🐳 Method 1: Docker (Recommended)
+Docker is the preferred way to run AMSOS as it bundles all dependencies and ensures a consistent environment.
+
+#### 1. Quick Start
+You can build and run the application in a single step using the provided `Dockerfile`.
+
+```bash
+# Clone the repository
+git clone https://github.com/Bobby10105/AMSOS.git
+cd AMSOS
+
+# Build the Docker image
+docker build -t amsos .
+
+# Create persistent volumes for the database and uploads
+docker volume create amsos-data
+docker volume create amsos-uploads
+
+# Run the container
+docker run -d \
+  -p 3000:3000 \
+  -v amsos-data:/app/prisma \
+  -v amsos-uploads:/app/public/uploads \
+  -e DATABASE_URL="file:./prisma/dev.db" \
+  -e JWT_SECRET="your-secure-secret-key" \
+  --name amsos \
+  amsos
+
+# Troubleshooting: If the container fails to start, check the logs
+# docker logs amsos
+```
+
+#### 2. Persistence Note
+The `-v` flags ensure your audit data and file attachments are stored outside the container, allowing you to update the app without losing data.
+
+---
+
+### 🛠 Method 2: Manual Installation (Node.js)
+If you prefer to run AMSOS directly on your host machine, follow these steps.
+
+#### 1. Prerequisites
+
 *   [Node.js](https://nodejs.org/) (v18 or later)
 *   npm (installed with Node.js)
 
-### 2. Setup
+#### 2. Setup
+
 ```bash
 # Clone the repository
 git clone https://github.com/Bobby10105/AMSOS.git
@@ -92,7 +134,8 @@ cd AMSOS
 npm install
 ```
 
-### 3. Environment Configuration
+#### 3. Environment Configuration
+
 Prisma requires a `DATABASE_URL` to be defined before creating the database. You can quickly create a `.env` file with the following command:
 
 ```bash
@@ -110,7 +153,8 @@ JWT_SECRET="your-secure-secret-key"
 EOF
 ```
 
-### 4. Database Creation & Seeding
+#### 4. Database Creation & Seeding
+
 Once the `.env` file is ready, run the following to initialize your workspace:
 
 ```bash
@@ -121,15 +165,17 @@ npx prisma db push
 npx prisma db seed
 ```
 
-### 5. Run the Application
+#### 5. Run the Application
+
 ```bash
 # Start development server
 npm run dev
 ```
+
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 6. Initial Login
-Once the application is running (see step 5), use the following default credentials to sign in and begin setup:
+### 🔑 Initial Login
+Once the application is running (via Docker or Node.js), use the following default credentials to sign in:
 
 *   **Username**: `admin`
 *   **Password**: `admin`
@@ -137,15 +183,18 @@ Once the application is running (see step 5), use the following default credenti
 **⚠️ Security Note:** Immediately after logging in, navigate to the **User Directory** to create your own administrative account and delete the default `admin` user, or change the default password via the profile menu.
 
 ### 7. Server Deployment (Production)
+
 For a stable, 24/7 server setup, follow these production-ready steps:
 
 #### Build the Application
+
 Compile the TypeScript and React code into a production-ready bundle:
 ```bash
 npm run build
 ```
 
 #### Process Management (PM2)
+
 It is recommended to use [PM2](https://pm2.keymetrics.io/) to keep the application running in the background and automatically restart it if it crashes.
 ```bash
 # Install PM2 globally
