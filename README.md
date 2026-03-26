@@ -110,8 +110,7 @@ docker run -d \
 # docker logs amsos
 ```
 
-#### MANDATORY: Change this to a random secure string for production
-JWT_SECRET="your-secure-secret-key"
+#### MANDATORY: (JWT_SECRET) For production, replace "your-secure-secret-key" with a cryptographically secure 256-bit (32-byte) random seed, encoded as a Base64 string. 
 
 #### Persistence Note
 The `-v` flags ensure your audit data and file attachments are stored outside the container, allowing you to update the app without losing data.
