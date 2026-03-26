@@ -40,17 +40,20 @@ export async function login(user: { id: string; username: string; role: string }
   const expires = new Date(Date.now() + SESSION_DURATION * 1000);
   const session = await encrypt({ user, expires });
 
-  // In production, we typically want secure cookies (HTTPS only).
-  // However, for local Docker testing on http://localhost, some browsers 
-  // will block 'secure' cookies. 
-  const isProduction = process.env.NODE_ENV === 'production';
-  const isLocalhost = process.env.HOSTNAME === 'localhost' || process.env.HOSTNAME === '0.0.0.0' || !process.env.NEXT_PUBLIC_BASE_URL?.startsWith('https');
-
   const cookieStore = await cookies();
+  
+  // CRITICAL DOCKER FIX:
+  // In production mode, Next.js defaults to 'secure: true' for cookies.
+  // This causes browsers to REJECT the cookie on http://localhost:3000.
+  // We explicitly disable 'secure' if we are not on an https connection.
+  const isProduction = process.env.NODE_ENV === 'production';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+  const isSecureEnv = baseUrl.startsWith('https://');
+
   cookieStore.set('session', session, { 
     expires, 
     httpOnly: true, 
-    secure: isProduction && !isLocalhost,
+    secure: isProduction && isSecureEnv, // Only true if both production AND explicit https
     sameSite: 'lax',
     path: '/',
   });
@@ -58,9 +61,13 @@ export async function login(user: { id: string; username: string; role: string }
 
 export async function logout() {
   const cookieStore = await cookies();
+  const isProduction = process.env.NODE_ENV === 'production';
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+  const isSecureEnv = baseUrl.startsWith('https://');
+
   cookieStore.set('session', '', { 
     expires: new Date(0),
-    secure: process.env.NODE_ENV === 'production' && !(!process.env.NEXT_PUBLIC_BASE_URL?.startsWith('https')),
+    secure: isProduction && isSecureEnv,
     path: '/',
   });
 }
@@ -69,20 +76,19 @@ export async function updateSession(request: NextRequest) {
   const session = request.cookies.get('session')?.value;
   if (!session) return;
 
-  // Refresh the session so it doesn't expire
   const parsed = await decrypt(session);
   const expires = new Date(Date.now() + SESSION_DURATION * 1000);
   parsed.expires = expires;
   
   const isProduction = process.env.NODE_ENV === 'production';
-  const isLocalhost = request.nextUrl.hostname === 'localhost' || request.nextUrl.hostname === '127.0.0.1';
+  const isSecureEnv = request.nextUrl.protocol === 'https:';
 
   const res = NextResponse.next();
   res.cookies.set({
     name: 'session',
     value: await encrypt(parsed),
     httpOnly: true,
-    secure: isProduction && !isLocalhost,
+    secure: isProduction && isSecureEnv,
     expires: expires,
     sameSite: 'lax',
     path: '/',
