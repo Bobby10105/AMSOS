@@ -174,6 +174,8 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+---
+
 ### 🔑 Initial Login
 Once the application is running (via Docker or Node.js), use the following default credentials to sign in:
 
@@ -182,7 +184,7 @@ Once the application is running (via Docker or Node.js), use the following defau
 
 **⚠️ Security Note:** Immediately after logging in, navigate to the **User Directory** to create your own administrative account and delete the default `admin` user, or change the default password via the profile menu.
 
-### 7. Server Deployment (Production)
+### Server Deployment (Production)
 
 For a stable, 24/7 server setup, follow these production-ready steps:
 
