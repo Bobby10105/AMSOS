@@ -45,11 +45,9 @@ COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma
 COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
 # Set the correct permission for prerender cache
-RUN mkdir .next
-RUN chown nextjs:nodejs .next
-
-# Ensure the entrypoint script is executable
+# We must be root to create directories and change ownership
 USER root
+RUN mkdir -p .next && chown nextjs:nodejs .next
 RUN chmod +x docker-entrypoint.sh
 USER nextjs
 
