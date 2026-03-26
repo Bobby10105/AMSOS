@@ -2,7 +2,7 @@ import { SignJWT, jwtVerify, JWTPayload } from 'jose';
 import { cookies } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 
-const secretKey = new TextEncoder().encode(process.env.JWT_SECRET);
+const secretKey = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-for-dev-only');
 const SESSION_DURATION = parseInt(process.env.SESSION_DURATION_SECONDS || '3600', 10); // Default 1 hour
 
 export async function encrypt(payload: JWTPayload) {
@@ -40,11 +40,17 @@ export async function login(user: { id: string; username: string; role: string }
   const expires = new Date(Date.now() + SESSION_DURATION * 1000);
   const session = await encrypt({ user, expires });
 
+  // In production, we typically want secure cookies (HTTPS only).
+  // However, for local Docker testing on http://localhost, some browsers 
+  // will block 'secure' cookies. 
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isLocalhost = process.env.HOSTNAME === 'localhost' || process.env.HOSTNAME === '0.0.0.0' || !process.env.NEXT_PUBLIC_BASE_URL?.startsWith('https');
+
   const cookieStore = await cookies();
   cookieStore.set('session', session, { 
     expires, 
     httpOnly: true, 
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction && !isLocalhost,
     sameSite: 'lax',
     path: '/',
   });
@@ -54,7 +60,7 @@ export async function logout() {
   const cookieStore = await cookies();
   cookieStore.set('session', '', { 
     expires: new Date(0),
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production' && !(!process.env.NEXT_PUBLIC_BASE_URL?.startsWith('https')),
     path: '/',
   });
 }
@@ -68,12 +74,15 @@ export async function updateSession(request: NextRequest) {
   const expires = new Date(Date.now() + SESSION_DURATION * 1000);
   parsed.expires = expires;
   
+  const isProduction = process.env.NODE_ENV === 'production';
+  const isLocalhost = request.nextUrl.hostname === 'localhost' || request.nextUrl.hostname === '127.0.0.1';
+
   const res = NextResponse.next();
   res.cookies.set({
     name: 'session',
     value: await encrypt(parsed),
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: isProduction && !isLocalhost,
     expires: expires,
     sameSite: 'lax',
     path: '/',
