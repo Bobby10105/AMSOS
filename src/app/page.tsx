@@ -1,6 +1,6 @@
 import { prisma } from '@/lib/prisma';
 import Link from 'next/link';
-import { PlusCircle, Calendar, ChevronRight, Archive, Inbox } from 'lucide-react';
+import { PlusCircle, Calendar, ChevronRight, Archive, Inbox, RotateCcw } from 'lucide-react';
 import { format } from 'date-fns';
 import { getSession } from '@/lib/auth';
 
@@ -65,12 +65,18 @@ export default async function Dashboard() {
     <div className="space-y-12">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold text-gray-900">Audits Dashboard</h1>
-        {user?.role === 'Administrator' && (
-          <Link href="/audits/new" className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors shadow-sm">
-            <PlusCircle className="w-5 h-5" />
-            <span>New Audit</span>
+        <div className="flex items-center space-x-3">
+          <Link href="/" className="flex items-center space-x-2 bg-white hover:bg-gray-50 text-gray-700 px-4 py-2 border border-gray-300 rounded-md transition-colors shadow-sm font-medium">
+            <RotateCcw className="w-4 h-4" />
+            <span>Refresh</span>
           </Link>
-        )}
+          {user?.role === 'Administrator' && (
+            <Link href="/audits/new" className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors shadow-sm">
+              <PlusCircle className="w-5 h-5" />
+              <span>New Audit</span>
+            </Link>
+          )}
+        </div>
       </div>
 
       {audits.length === 0 ? (
