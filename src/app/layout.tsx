@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Link from 'next/link';
-import { FileText, ClipboardList, Users, BookOpen } from 'lucide-react';
+import { FileText, ClipboardList, Users, BookOpen, Home } from 'lucide-react';
 import { getSession } from '@/lib/auth';
 import UserMenu from '@/components/UserMenu';
 
@@ -40,6 +40,13 @@ export default async function RootLayout({
 
               {user && (
                 <nav className="hidden lg:flex items-center space-x-4">
+                  <Link
+                    href="/"
+                    className="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors text-sm font-medium bg-blue-800/40 hover:bg-blue-800/60 px-3 py-2 rounded-lg"
+                  >
+                    <Home className="h-4 w-4" />
+                    <span>Dashboard</span>
+                  </Link>
                   {user.role?.toLowerCase().trim() === 'administrator' && (
                     <>
                       <Link
@@ -48,7 +55,8 @@ export default async function RootLayout({
                       >
                         <ClipboardList className="h-4 w-4" />
                         <span>Logs</span>
-                      </Link>                      <Link 
+                      </Link>
+                      <Link 
                         href="/admin/users" 
                         className="flex items-center space-x-2 text-blue-100 hover:text-white transition-colors text-sm font-medium bg-blue-800/40 hover:bg-blue-800/60 px-3 py-2 rounded-lg"
                       >

@@ -29,6 +29,16 @@ export async function middleware(request: NextRequest) {
     pathname === '/favicon.ico' ||
     pathname.startsWith('/uploads');
 
+  // If user is logged in and trying to access login page, redirect to home
+  if (pathname === '/login' && session) {
+    try {
+      await decrypt(session);
+      return NextResponse.redirect(new URL('/', request.url));
+    } catch (error) {
+      // Session invalid or expired, proceed to login page
+    }
+  }
+
   if (isPublicPath) {
     return response;
   }
