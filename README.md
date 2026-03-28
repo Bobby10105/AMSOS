@@ -118,18 +118,20 @@ The `-v` flags ensure your audit data and file attachments are stored in persist
 ---
 
 ### 🏗 Method 2: Docker Compose (Development & Testing)
-Use this method if you want to test changes in real-time. It uses a separate development configuration that mounts your local source code directly into the container.
+Use this method if you want to develop or test changes in real-time. This configuration mounts your local source code directly into the container, allowing for a seamless development experience.
 
 ```bash
 # Build and start the development environment
 docker compose up --build
 ```
 
-**Features of the Dev Build:**
-*   **Hot Reloading**: Any code changes you make locally are instantly reflected in the container.
-*   **Real-time Logs**: See the server and database logs directly in your terminal.
-*   **Automatic Setup**: Handles database pushes and seeding automatically on startup.
-*   **Persistent Data**: Uses volumes to keep your test data and uploads even if you restart the container.
+**Why use Docker Compose for development?**
+*   **🔥 Save & Refresh**: Your local files are synced into the container. Simply save a file in your editor, and the app will automatically reload in your browser.
+*   **Real-time Logs**: View server-side logs and database operations directly in your terminal window.
+*   **Zero-Config Database**: The environment automatically handles database migrations and seeding every time it starts.
+*   **Data Persistence**: Uses Docker volumes to ensure your test audits and uploads are preserved across restarts.
+
+> 💡 **Note**: If you add new packages to `package.json`, you must run `docker compose up --build` again to install the new dependencies inside the container.
 
 To stop the environment, use `docker compose down`.
 
