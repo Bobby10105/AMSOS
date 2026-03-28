@@ -81,7 +81,7 @@ AMSOS uses a granular **Role-Based Access Control (RBAC)** model to ensure data 
 ## 💻 Installation & Setup
 
 ### 🐳 Method 1: Docker (Production)
-Docker is the preferred way to run AMSOS as it bundles all dependencies and ensures a consistent environment.
+Docker is the preferred way to run AMSOS as it bundles all dependencies and ensures a consistent environment. If you don't have it yet, you can download it from the [Official Docker Website](https://www.docker.com/).
 
 #### 1. Quick Start
 You can build and run the application in a single step using the provided `Dockerfile`.
