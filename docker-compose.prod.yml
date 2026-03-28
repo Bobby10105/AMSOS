@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - amsos-uploads:/app/public/uploads
+      - amsos-db:/app/prisma/data
+    environment:
+      # MANDATORY: Change this to a random secure string for production
+      - JWT_SECRET=change-me-to-a-secure-random-string
+      - DATABASE_URL=file:/app/prisma/data/dev.db
+      - NODE_ENV=production
+      # - SSO_CLIENT_ID=your-client-id
+      # - SSO_CLIENT_SECRET=your-client-secret
+      # - SSO_ISSUER_URL=https://idp.agency.gov
+      # - NEXT_PUBLIC_BASE_URL=https://your-app-url.gov
+    restart: unless-stopped
+
+volumes:
+  amsos-uploads:
+  amsos-db:

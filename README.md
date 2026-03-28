@@ -78,164 +78,88 @@ AMSOS uses a granular **Role-Based Access Control (RBAC)** model to ensure data 
 ![Comments and Attachments](docs/images/review_comments.png)
 *Reviewer Collaboration Tools featuring real-time comments and secure file attachments for comprehensive workpaper support.*
 
-## 💻 Installation & Setup
+## 💻 Installation & Deployment
 
-### 🐳 Method 1: Docker (Production)
-Docker is the preferred way to run AMSOS as it bundles all dependencies and ensures a consistent environment. If you don't have it yet, you can download it from the [Official Docker Website](https://www.docker.com/).
+AMSOS is designed for complete infrastructure-agnostic flexibility. Whether you are a solo practitioner or a large firm, choose the method that fits your IT environment.
 
-#### 1. Quick Start
-You can build and run the application in a single step using the provided `Dockerfile`.
+### 🐳 Method 1: Docker Compose (Recommended for Business & Cloud)
+This is the professional standard for deploying AMSOS. It ensures a consistent environment, handles data persistence automatically, and is ready for your "Private Cloud" (AWS, Azure, GCP).
 
-```bash
-# Clone the repository
-git clone https://github.com/Bobby10105/AMSOS.git
-cd AMSOS
+1.  **Clone & Configure**:
+    ```bash
+    git clone https://github.com/Bobby10105/AMSOS.git
+    cd AMSOS
+    ```
+2.  **Edit Security**: Open `docker-compose.prod.yml` and replace `change-me-to-a-secure-random-string` with a secure random key for `JWT_SECRET`.
+3.  **Launch**:
+    ```bash
+    docker compose -f docker-compose.prod.yml up -d --build
+    ```
 
-# Build the Docker image
-docker build -t amsos .
-
-# Create persistent volumes for the database and uploads
-docker volume create amsos-uploads
-docker volume create amsos-db
-
-# Run the container
-# Note: We mount the DB volume to a sub-folder to keep the app's schema file intact
-docker run -d \
-  -p 3000:3000 \
-  -v amsos-uploads:/app/public/uploads \
-  -v amsos-db:/app/prisma/data \
-  -e DATABASE_URL="file:/app/prisma/data/dev.db" \
-  -e JWT_SECRET="your-secure-secret-key" \
-  --name amsos \
-  amsos
-```
-
-#### ⚠️ MANDATORY: (JWT_SECRET) For production, replace "your-secure-secret-key" with a cryptographically secure 256-bit (32-byte) random seed, encoded as a Base64 string. 
-
-#### Persistence Note
-The `-v` flags ensure your audit data and file attachments are stored in persistent Docker volumes, allowing you to update the app image without losing data.
+**Why this method?**
+*   **Data Sovereignty**: Your audit data is stored in Docker volumes (`amsos-db` and `amsos-uploads`) on *your* infrastructure.
+*   **Cloud Ready**: Easily deployable to any service that supports Docker (e.g., AWS Fargate, Azure Container Instances).
+*   **Zero-Maintenance**: Automatically restarts if the server reboots (`restart: unless-stopped`).
 
 ---
 
-### 🏗 Method 2: Docker Compose (Development & Testing)
-Use this method if you want to develop or test changes in real-time. This configuration mounts your local source code directly into the container, allowing for a seamless development experience.
+### 🚀 Method 2: Docker Quickstart (Testing & Evaluation)
+Use this if you just want to see how AMSOS works without long-term setup. This method uses our development configuration to get you up and running in seconds.
 
 ```bash
-# Build and start the development environment
 docker compose up --build
 ```
-
-**Why use Docker Compose for development?**
-*   **🔥 Save & Refresh**: Your local files are synced into the container. Simply save a file in your editor, and the app will automatically reload in your browser.
-*   **Real-time Logs**: View server-side logs and database operations directly in your terminal window.
-*   **Zero-Config Database**: The environment automatically handles database migrations and seeding every time it starts.
-*   **Data Persistence**: Uses Docker volumes to ensure your test audits and uploads are preserved across restarts.
-
-> 💡 **Note**: If you add new packages to `package.json`, you must run `docker compose up --build` again to install the new dependencies inside the container.
-
-To stop the environment, use `docker compose down`.
+*Note: This runs in the foreground and is optimized for testing changes. Use Method 1 for actual audit fieldwork.*
 
 ---
 
-### 🛠 Method 2: Manual Installation (Node.js)
-If you prefer to run AMSOS directly on your host machine, follow these steps.
+### 🛠 Method 3: Manual Installation (Node.js)
+If you prefer to run AMSOS directly on your host machine or have a custom Windows Server environment without Docker.
 
 #### 1. Prerequisites
-
 *   [Node.js](https://nodejs.org/) (v18 or later)
 *   npm (installed with Node.js)
 
 #### 2. Setup
-
 ```bash
-# Clone the repository
 git clone https://github.com/Bobby10105/AMSOS.git
 cd AMSOS
-
-# Install dependencies
 npm install
 ```
 
 #### 3. Environment Configuration
-
-Prisma requires a `DATABASE_URL` to be defined before creating the database. You can quickly create a `.env` file with the following command:
-
+Create a `.env` file in the root directory:
 ```bash
-cat << 'EOF' > .env
 DATABASE_URL="file:./dev.db"
-
-# MANDATORY: Change this to a random secure string for production
-JWT_SECRET="your-secure-secret-key"
-
-# (Optional) Federal SSO Configuration (OIDC)
-# SSO_CLIENT_ID="your-client-id"
-# SSO_CLIENT_SECRET="your-client-secret"
-# SSO_ISSUER_URL="https://idp.agency.gov"
-# NEXT_PUBLIC_BASE_URL="https://your-app-url.gov"
-EOF
+JWT_SECRET="your-secure-secret-key" # CHANGE THIS FOR PRODUCTION
 ```
 
-#### 4. Database Creation & Seeding
-
-Once the `.env` file is ready, run the following to initialize your workspace:
-
+#### 4. Database & Launch
 ```bash
-# Create the database and sync the schema
 npx prisma db push
-
-# Create the initial admin user
 npx prisma db seed
-```
-
-#### 5. Run the Application
-
-```bash
-# Start development server
-npm run dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Server Deployment (Production)
-
-For a stable, 24/7 server setup, follow these production-ready steps:
-
-#### Build the Application
-
-Compile the TypeScript and React code into a production-ready bundle:
-```bash
 npm run build
-```
-
-#### Process Management (PM2)
-
-It is recommended to use [PM2](https://pm2.keymetrics.io/) to keep the application running in the background and automatically restart it if it crashes.
-```bash
-# Install PM2 globally
-npm install -g pm2
-
-# Start the application
-pm2 start npm --name "amsos" -- start
-
-# Save the current process list
-pm2 save
-
-# ⚠️ Setup Automatic Reboot (Crucial Step)
-# Running 'pm2 startup' will generate a specific command.
-# You MUST copy that entire line from your terminal, paste it, and run it 
-# (it will look like: sudo env PATH=$PATH:/home/user/bin /usr/lib/node_modules/pm2/bin/pm2 startup ...)
-pm2 startup
+npm run start
 ```
 
 ---
 
 ### 🔑 Initial Login
-Once the application is running (via Docker or Node.js), use the following default credentials to sign in:
-
+Once running, sign in with:
 *   **Username**: `admin`
 *   **Password**: `admin`
 
-**⚠️ Security Note:** Immediately after logging in, navigate to the **User Directory** to create your own administrative account and delete the default `admin` user, or change the default password via the profile menu.
+**⚠️ Security Note:** Immediately create your own administrative account and delete the default `admin` user to secure your audit environment.
+
+## 🛡 Business Readiness
+
+AMSOS was built with the specific needs of **CPA Firms** and **Internal Audit Departments** in mind:
+
+*   **Private Cloud Deployment**: Unlike standard SaaS, you can deploy AMSOS within your own Virtual Private Cloud (VPC), ensuring your sensitive client data never leaves your control.
+*   **SQLite Portability**: Your entire database is a single file. This makes off-site backups, disaster recovery, and data archiving as simple as copying a folder.
+*   **Audit Logging**: Every login and major record change is tracked to ensure accountability.
+*   **No Vendor Lock-in**: As an open-source tool, you have full access to your data and the source code, protecting you from future fee increases or platform shutdowns.
+
 
 #### 🔒 Reverse Proxy (Nginx)
 For public access and SSL (HTTPS), use Nginx as a reverse proxy on port 80/443. A sample configuration:
