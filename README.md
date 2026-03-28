@@ -82,6 +82,9 @@ AMSOS uses a granular **Role-Based Access Control (RBAC)** model to ensure data 
 
 AMSOS is designed for complete infrastructure-agnostic flexibility. Whether you are a solo practitioner or a large firm, choose the method that fits your IT environment.
 
+### 🐳 Prerequisites (Docker Methods)
+To use the Docker methods below, you must have [Docker](https://www.docker.com/) installed on your server or local machine.
+
 ### 🐳 Method 1: Docker Compose (Recommended for Business & Cloud)
 This is the professional standard for deploying AMSOS. It ensures a consistent environment, handles data persistence automatically, and is ready for your "Private Cloud" (AWS, Azure, GCP).
 
