@@ -49,6 +49,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/docker-entrypoint.sh ./docker-ent
 USER root
 RUN mkdir -p .next && chown nextjs:nodejs .next
 RUN mkdir -p public/uploads && chown nextjs:nodejs public/uploads
+RUN mkdir -p prisma/data && chown nextjs:nodejs prisma/data
 RUN chmod +x docker-entrypoint.sh
 USER nextjs
 
