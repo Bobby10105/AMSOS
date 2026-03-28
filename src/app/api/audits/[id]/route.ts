@@ -65,6 +65,8 @@ export async function PUT(req: Request, props: { params: Promise<{ id: string }>
     if (data.reportIssuedDate !== undefined) updateData.reportIssuedDate = parseDate(data.reportIssuedDate);
     
     if (data.title !== undefined) updateData.title = data.title;
+    if (data.category !== undefined) updateData.category = data.category;
+    if (data.auditNumber !== undefined) updateData.auditNumber = data.auditNumber;
     if (data.description !== undefined) updateData.description = data.description;
     if (data.objective !== undefined) updateData.objective = data.objective;
     if (data.status !== undefined) updateData.status = data.status;

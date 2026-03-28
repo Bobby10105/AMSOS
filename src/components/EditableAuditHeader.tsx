@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, Edit2, X } from 'lucide-react';
+import { Save, Edit2, X, Tag, Hash } from 'lucide-react';
 import StatusToggleButton from './StatusToggleButton';
 import DeleteAuditButton from './DeleteAuditButton';
 import ExportAuditButton from './ExportAuditButton';
@@ -18,6 +18,8 @@ export default function EditableAuditHeader({
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [title, setTitle] = useState(audit.title);
+  const [category, setCategory] = useState(audit.category || '');
+  const [auditNumber, setAuditNumber] = useState(audit.auditNumber || '');
   const [objective, setObjective] = useState(audit.objective || '');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -28,7 +30,12 @@ export default function EditableAuditHeader({
       const res = await fetch(`/api/audits/${audit.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, objective }),
+        body: JSON.stringify({ 
+          title, 
+          category,
+          auditNumber,
+          objective 
+        }),
       });
 
       if (res.ok) {
@@ -58,6 +65,26 @@ export default function EditableAuditHeader({
               onChange={(e) => setTitle(e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-2xl font-bold"
             />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wide">Category</label>
+              <input
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g. Financial"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wide">Audit Number</label>
+              <input
+                value={auditNumber}
+                onChange={(e) => setAuditNumber(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="e.g. AUD-2024-001"
+              />
+            </div>
           </div>
           <div>
             <label className="block text-sm font-bold text-gray-700 mb-1 uppercase tracking-wide">Audit Objective</label>
@@ -95,16 +122,32 @@ export default function EditableAuditHeader({
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-8 mb-8 group relative">
       <div className="flex justify-between items-start">
         <div className="flex-1">
-          <div className="flex items-center space-x-4 mb-2">
+          <div className="flex items-center space-x-4 mb-1">
             <h1 className="text-3xl font-bold text-gray-900">{audit.title}</h1>
             <button 
               onClick={() => setIsEditing(true)}
               className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-colors opacity-0 group-hover:opacity-100"
-              title="Edit Title and Objective"
+              title="Edit Audit Details"
             >
               <Edit2 className="w-5 h-5" />
             </button>
           </div>
+          
+          <div className="flex items-center space-x-4 mb-4 text-sm font-medium text-gray-500">
+            {audit.category && (
+              <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-gray-100 rounded-md">
+                <Tag className="w-3.5 h-3.5" />
+                <span>{audit.category}</span>
+              </div>
+            )}
+            {audit.auditNumber && (
+              <div className="flex items-center space-x-1.5 px-2.5 py-1 bg-gray-100 rounded-md">
+                <Hash className="w-3.5 h-3.5" />
+                <span>{audit.auditNumber}</span>
+              </div>
+            )}
+          </div>
+
           <div className="mb-4">
             <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Objective</h2>
             <p className="text-gray-600 max-w-3xl whitespace-pre-wrap">

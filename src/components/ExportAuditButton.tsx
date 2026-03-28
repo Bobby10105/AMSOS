@@ -32,8 +32,32 @@ export default function ExportAuditButton({ audit }: { audit: AuditWithRelations
           text: `Audit Program: ${audit.title}`,
           heading: HeadingLevel.HEADING_1,
           alignment: AlignmentType.CENTER,
-          spacing: { after: 200 },
-        }),
+          spacing: { after: 100 },
+        })
+      );
+
+      // Category and Number
+      if (audit.category || audit.auditNumber) {
+        const subheaderChildren = [];
+        if (audit.category) {
+          subheaderChildren.push(new TextRun({ text: `Category: `, bold: true }));
+          subheaderChildren.push(new TextRun({ text: `${audit.category}    ` }));
+        }
+        if (audit.auditNumber) {
+          subheaderChildren.push(new TextRun({ text: `Audit #: `, bold: true }));
+          subheaderChildren.push(new TextRun({ text: `${audit.auditNumber}` }));
+        }
+
+        sections.push(
+          new Paragraph({
+            children: subheaderChildren,
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 200 },
+          })
+        );
+      }
+
+      sections.push(
         new Paragraph({
           children: [
             new TextRun({ text: "Date Exported: ", bold: true }),

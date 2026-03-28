@@ -37,6 +37,8 @@ export async function POST(req: Request) {
     data: {
       title: data.title,
       description: data.description,
+      category: data.category,
+      auditNumber: data.auditNumber,
       objective: data.objective,
       status: data.status || 'In Progress',
     }

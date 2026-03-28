@@ -24,6 +24,8 @@ model Audit {
   id                      String       @id @default(uuid())
   title                   String
   description             String?
+  category                String?
+  auditNumber             String?
   objective               String?
   status                  String       @default("In Progress")
   fieldworkStartDate      DateTime?

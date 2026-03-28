@@ -8,6 +8,8 @@ import Link from 'next/link';
 export default function NewAudit() {
   const router = useRouter();
   const [title, setTitle] = useState('');
+  const [category, setCategory] = useState('');
+  const [auditNumber, setAuditNumber] = useState('');
   const [objective, setObjective] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -19,7 +21,13 @@ export default function NewAudit() {
       const res = await fetch('/api/audits', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, objective, status: 'In Progress' }),
+        body: JSON.stringify({ 
+          title, 
+          category,
+          auditNumber,
+          objective, 
+          status: 'In Progress' 
+        }),
       });
       if (res.ok) {
         router.push('/');
@@ -52,6 +60,31 @@ export default function NewAudit() {
               className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               placeholder="e.g. Q3 Financial Audit"
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Audit Category</label>
+              <input
+                id="category"
+                type="text"
+                value={category}
+                onChange={e => setCategory(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g. Financial"
+              />
+            </div>
+            <div>
+              <label htmlFor="auditNumber" className="block text-sm font-medium text-gray-700 mb-1">Audit Number</label>
+              <input
+                id="auditNumber"
+                type="text"
+                value={auditNumber}
+                onChange={e => setAuditNumber(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g. AUD-2024-001"
+              />
+            </div>
           </div>
           
           <div>
