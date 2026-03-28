@@ -1,8 +1,12 @@
 #!/bin/sh
 set -e
 
+# Set a default DATABASE_URL if not provided
+if [ -z "$DATABASE_URL" ]; then
+  export DATABASE_URL="file:/app/prisma/dev.db"
+fi
+
 # Run Prisma db push to ensure DB schema is created
-# Since we don't have migration files, we use db push to sync the schema directly
 echo "Initializing database schema (Prisma 6)..."
 npx prisma@6 db push --accept-data-loss
 
