@@ -154,9 +154,10 @@ Once running, sign in with:
 
 **⚠️ Security Note:** Immediately create your own administrative account and delete the default `admin` user to secure your audit environment.
 
-## 🛡 Business Readiness
+## 👔 Business Readiness
 
-AMSOS was built with the specific needs of **CPA Firms** and **Internal Audit Departments** in mind:
+AMSOS was built with the specific needs of **CPA Firms
+** and **Internal Audit Departments** in mind:
 
 *   **Private Cloud Deployment**: Unlike standard SaaS, you can deploy AMSOS within your own Virtual Private Cloud (VPC), ensuring your sensitive client data never leaves your control.
 *   **SQLite Portability**: Your entire database is a single file. This makes off-site backups, disaster recovery, and data archiving as simple as copying a folder.
@@ -184,7 +185,7 @@ server {
 }
 ```
 
-## 🛡 Security & Management
+## 💻 Management
 
 *   **Password Management**: Users can securely change their own passwords by clicking their profile icon in the navigation bar.
 *   **User Directory**: Accessible to all users to view the team, but only **Administrators** can add, delete, or bulk-import users via CSV.
@@ -198,7 +199,7 @@ server {
 *   `/prisma`: Database schema and configuration.
 *   `/public/uploads`: Local storage for audit procedure attachments.
 
-## 🛡 Security & Responsibility
+## 🛡 Responsibility
 **The user is solely responsible for the security, configuration, and proper deployment of this software.** 
 
 The authors and contributors accept **no responsibility** for security incidents, data breaches, data loss, or system failures. Users must ensure:
