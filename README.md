@@ -80,7 +80,7 @@ AMSOS uses a granular **Role-Based Access Control (RBAC)** model to ensure data 
 
 ## 💻 Installation & Setup
 
-### 🐳 Method 1: Docker (Recommended)
+### 🐳 Method 1: Docker (Production)
 Docker is the preferred way to run AMSOS as it bundles all dependencies and ensures a consistent environment.
 
 #### 1. Quick Start
@@ -95,27 +95,43 @@ cd AMSOS
 docker build -t amsos .
 
 # Create persistent volumes for the database and uploads
-docker volume create amsos-data
 docker volume create amsos-uploads
+docker volume create amsos-db
 
 # Run the container
+# Note: We mount the DB volume to a sub-folder to keep the app's schema file intact
 docker run -d \
   -p 3000:3000 \
-  -v amsos-data:/app/prisma \
   -v amsos-uploads:/app/public/uploads \
-  -e DATABASE_URL="file:./prisma/dev.db" \
+  -v amsos-db:/app/prisma/data \
+  -e DATABASE_URL="file:/app/prisma/data/dev.db" \
   -e JWT_SECRET="your-secure-secret-key" \
   --name amsos \
   amsos
-
-# Troubleshooting: If the container fails to start, check the logs
-# docker logs amsos
 ```
 
 #### ⚠️ MANDATORY: (JWT_SECRET) For production, replace "your-secure-secret-key" with a cryptographically secure 256-bit (32-byte) random seed, encoded as a Base64 string. 
 
 #### Persistence Note
-The `-v` flags ensure your audit data and file attachments are stored outside the container, allowing you to update the app without losing data.
+The `-v` flags ensure your audit data and file attachments are stored in persistent Docker volumes, allowing you to update the app image without losing data.
+
+---
+
+### 🏗 Method 2: Docker Compose (Development & Testing)
+Use this method if you want to test changes in real-time. It uses a separate development configuration that mounts your local source code directly into the container.
+
+```bash
+# Build and start the development environment
+docker compose up --build
+```
+
+**Features of the Dev Build:**
+*   **Hot Reloading**: Any code changes you make locally are instantly reflected in the container.
+*   **Real-time Logs**: See the server and database logs directly in your terminal.
+*   **Automatic Setup**: Handles database pushes and seeding automatically on startup.
+*   **Persistent Data**: Uses volumes to keep your test data and uploads even if you restart the container.
+
+To stop the environment, use `docker compose down`.
 
 ---
 
