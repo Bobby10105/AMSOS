@@ -203,11 +203,10 @@ export default function MilestonesTab({ audit }: { audit: Audit }) {
                     </p>
                     <a
                       href={attachmentUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      download={attachmentName || 'milestones.xlsx'}
                       className="text-xs text-blue-600 hover:underline font-medium"
                     >
-                      Download / View Spreadsheet
+                      Download Spreadsheet
                     </a>
                   </div>
                   <button

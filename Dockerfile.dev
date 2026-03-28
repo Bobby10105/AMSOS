@@ -1,0 +1,22 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Install dependencies based on the preferred package manager
+COPY package.json package-lock.json* ./
+RUN npm install
+
+# Copy everything else
+COPY . .
+
+# Generate Prisma Client (needed even in dev)
+RUN npx prisma generate
+
+EXPOSE 3000
+
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
+# Use the existing entrypoint script to set up the DB, 
+# but override the final process to use the dev server
+CMD npx prisma db push --accept-data-loss && npx prisma db seed && npm run dev

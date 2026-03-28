@@ -172,7 +172,13 @@ export default function ProcedureItem({
         const newAttachment = await res.json();
         setAttachments([...attachments, newAttachment]);
         router.refresh();
+      } else {
+        const errorData = await res.json();
+        alert(`Upload failed: ${errorData.error || 'Unknown error'}`);
       }
+    } catch (error) {
+      console.error(error);
+      alert('An error occurred during upload.');
     } finally {
       setUploading(false);
       e.target.value = '';

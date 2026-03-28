@@ -142,30 +142,25 @@ export async function POST(req: Request) {
 
     console.log('[API/Upload] Updating procedure attachment:', cleanProcedureId);
     try {
-      const rawResult = await prisma.$queryRawUnsafe<{ maxOrder: bigint }[]>(
-        `SELECT MAX(displayOrder) as maxOrder FROM Attachment WHERE procedureId = ?`,
-        cleanProcedureId
-      );
-      
-      const nextOrder = Number(rawResult[0]?.maxOrder || 0) + 1;
-      const attachmentId = crypto.randomUUID();
-
-      await prisma.$executeRawUnsafe(
-        `INSERT INTO Attachment (id, procedureId, filename, filepath, mimetype, size, displayOrder, createdAt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-        attachmentId,
-        cleanProcedureId,
-        filenameAttr,
-        `/uploads/${diskFilename}`,
-        fileAny.type || 'application/octet-stream',
-        fileAny.size || 0,
-        nextOrder,
-        new Date().toISOString()
-      );
-
-      const attachment = await prisma.attachment.findUnique({
-        where: { id: attachmentId }
+      const aggregateResult = await prisma.attachment.aggregate({
+        where: { procedureId: cleanProcedureId },
+        _max: { displayOrder: true }
       });
+      
+      const nextOrder = (aggregateResult._max.displayOrder || 0) + 1;
+      
+      const attachment = await prisma.attachment.create({
+        data: {
+          procedureId: cleanProcedureId,
+          filename: filenameAttr,
+          filepath: `/uploads/${diskFilename}`,
+          mimetype: fileAny.type || 'application/octet-stream',
+          size: Number(fileAny.size) || 0,
+          displayOrder: nextOrder,
+        }
+      });
+
+      const attachmentId = attachment.id;
 
       try {
         const procedure = await prisma.procedure.findUnique({
