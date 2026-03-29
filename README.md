@@ -55,6 +55,16 @@ AMSOS uses a granular **Role-Based Access Control (RBAC)** model to ensure data 
 | **Auditor** | Standard role. Can document procedures, upload attachments, and sign off as a preparer. |
 | **Specialist** | Contributor role. Can document procedures but is **restricted from deleting procedures** to protect data integrity. |
 
+### Audit Team Roles
+
+While System Roles control application-wide permissions, the **Audit Team** assignment allows you to define specific functional roles within an individual project. These roles are for documentation and identification purposes and do not override system-level RBAC.
+
+Key team roles include:
+*   **Lead Auditor**: Primary contact and coordinator for the audit engagement.
+*   **Quality Reviewer**: An independent reviewer (often from outside the immediate engagement team) who performs a final objective evaluation of the audit's significant judgments and conclusions.
+*   **Staff/Senior Auditor**: Core team members responsible for fieldwork and procedure documentation.
+*   **Specialist**: Subject matter experts (e.g., IT, Actuarial) providing focused support to the audit.
+
 ### Access Control Rules
 *   **Audit Visibility**: Non-administrators can **only** see and access audits to which they have been explicitly added as a **Team Member**.
 *   **Audit Deletion**: A safety-first approach restricts audit deletion strictly to the **Administrator** role.
