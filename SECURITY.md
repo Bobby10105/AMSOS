@@ -38,5 +38,5 @@ We will acknowledge receipt of your report within and provide a timeline for add
 - [ ] **Database SSL:** Ensure the database connection string uses `sslmode=verify-full`.
 - [ ] **SSO Integration:** Configure `SAML_ENTRYPOINT` and `SAML_CERT` (or OIDC equivalents).
 - [ ] **Input Validation (SI-10):** Verify that all application endpoints leverage the built-in sanitization logic.
-- [ ] **Log Ingestion:** Verify that `stdout` logs are being captured by your agency's SIEM (Splunk, etc.).
+- [ ] **Log Ingestion:** Verify that `stdout` logs are being captured by your agency's SIEM.
 - [ ] **Environment Secrets:** Do not use `.env` files in production; use a FIPS-compliant secret manager (AWS Secret Manager, HashiCorp Vault).
