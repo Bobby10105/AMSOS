@@ -59,3 +59,7 @@ next-env.d.ts
 
 # pnpm store
 /.pnpm-store
+
+# python cache
+__pycache__/
+

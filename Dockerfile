@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .pnpmfile.cjs ./
-RUN npm install -g pnpm && pnpm i --frozen-lockfile
+RUN npm install -g pnpm@9 && pnpm i --no-frozen-lockfile
 
 # Stage 2: Rebuild the source code only when needed
 FROM node:22-bookworm-slim AS builder
@@ -21,7 +21,7 @@ RUN npx prisma generate
 # Learn more here: https://nextjs.org/telemetry
 ENV NEXT_TELEMETRY_DISABLED 1
 
-RUN npm install -g pnpm && pnpm run build
+RUN npm install -g pnpm@9 && pnpm run build
 
 # Stage 3: Production image, copy all the files and run next
 FROM node:22-bookworm-slim AS runner

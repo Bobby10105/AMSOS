@@ -149,8 +149,22 @@ export function ProcedureAttachments({
     }
   };
 
-  const handleCopyReference = (text: string, id: string) => {
-    navigator.clipboard.writeText(text).then(() => {
+  const handleCopyReference = (ref: string, id: string, href: string) => {
+    const html = `<a href="${href}" target="_blank" rel="noopener noreferrer">${ref}</a>`;
+    const write = async () => {
+      if (typeof ClipboardItem !== 'undefined') {
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'text/html': new Blob([html], { type: 'text/html' }),
+            'text/plain': new Blob([ref], { type: 'text/plain' }),
+          }),
+        ]);
+      } else {
+        await navigator.clipboard.writeText(ref);
+      }
+    };
+
+    write().then(() => {
       setCopiedId(id);
       setTimeout(() => setCopiedId(null), 2000);
     });
@@ -213,7 +227,7 @@ export function ProcedureAttachments({
                 </div>
                 <div className="flex items-center space-x-2 ml-4">
                   <button 
-                    onClick={() => handleCopyReference(attNomenclature, att.id)}
+                    onClick={() => handleCopyReference(attNomenclature, att.id, `/api/attachments/${att.id}`)}
                     className="p-3 text-gray-400 hover:text-blue-600 hover:bg-white rounded-xl transition-all shadow-sm active:scale-90"
                     title="Copy Reference"
                     aria-label="Copy Reference"

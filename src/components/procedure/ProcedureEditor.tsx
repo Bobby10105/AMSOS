@@ -20,6 +20,7 @@ function ProcedureField({
   setFocusedField,
   handleRichTextChange,
   handleSave,
+  attachmentLinks,
 }: {
   field: { name: string; label: string };
   data: ProcedureWithRelations;
@@ -29,6 +30,7 @@ function ProcedureField({
   setFocusedField: (field: string | null) => void;
   handleRichTextChange: (field: string, content: string) => void;
   handleSave: () => void;
+  attachmentLinks?: Record<string, string>;
 }) {
   return (
     <div
@@ -73,6 +75,7 @@ function ProcedureField({
             handleSave(); // Immediate save on blur for better feel
           }}
           placeholder={isLocked ? "No content provided." : `Provide comprehensive details for ${field.label.toLowerCase()}...`}
+          attachmentLinks={attachmentLinks}
         />
       </div>
     </div>
@@ -87,6 +90,7 @@ export function ProcedureEditor({
   isFieldDirty,
   handleRichTextChange,
   handleSave,
+  attachmentLinks,
 }: {
   data: ProcedureWithRelations;
   isLocked: boolean;
@@ -95,6 +99,7 @@ export function ProcedureEditor({
   isFieldDirty: (field: string) => boolean;
   handleRichTextChange: (field: string, content: string) => void;
   handleSave: () => void;
+  attachmentLinks?: Record<string, string>;
 }) {
   return (
     <div className="space-y-12">
@@ -109,6 +114,7 @@ export function ProcedureEditor({
           setFocusedField={setFocusedField}
           handleRichTextChange={handleRichTextChange}
           handleSave={handleSave}
+          attachmentLinks={attachmentLinks}
         />
       ))}
     </div>

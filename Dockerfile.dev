@@ -7,7 +7,7 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml .pnpmfile.cjs ./
-RUN npm install -g pnpm && pnpm i --frozen-lockfile
+RUN npm install -g pnpm@9 && pnpm i --no-frozen-lockfile
 
 # Copy everything else
 COPY . .

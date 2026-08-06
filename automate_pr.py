@@ -17,7 +17,7 @@ OWNER = "Bobby10105"
 REPO = "OpenWorkpaper"
 
 # Sourced token fallback
-DEFAULT_TOKEN = None
+DEFAULT_TOKEN = os.getenv("GITHUB_TOKEN", "")
 
 def get_headers(token):
     return {

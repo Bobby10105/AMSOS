@@ -1,6 +1,6 @@
 'use client';
 /** OpenWorkpaper ProcedureDetail - Full Page Editor with Auto-Save **/
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import type { TeamMember } from '@prisma/client';
 import type { ProcedureWithRelations } from '@/lib/types';
 import { useProcedureState } from './procedure/useProcedureState';
@@ -10,6 +10,7 @@ import { ProcedureEditor } from './procedure/ProcedureEditor';
 import { ProcedureAttachments } from './procedure/ProcedureAttachments';
 import { ProcedureChat } from './procedure/ProcedureChat';
 import { ProcedureSignOffs } from './procedure/ProcedureSignOffs';
+import { buildAttachmentLinkMap } from '@/lib/attachment-links';
 
 export default function ProcedureDetail({ 
   procedure, 
@@ -26,6 +27,10 @@ export default function ProcedureDetail({
 }) {
   const state = useProcedureState({ procedure });
   const [focusedField, setFocusedField] = useState<string | null>(null);
+  const attachmentLinks = useMemo(
+    () => buildAttachmentLinkMap(nomenclature, state.attachments),
+    [nomenclature, state.attachments],
+  );
 
   const canDelete = user?.role !== 'Specialist' && !state.isLocked;
   const allowedUnlockRoles = ['Auditor', 'Audit Manager', 'Audit Director', 'Audit Partner', 'Business Operations', 'Engagement Manager'];
@@ -78,6 +83,7 @@ export default function ProcedureDetail({
             isFieldDirty={state.isFieldDirty}
             handleRichTextChange={state.handleRichTextChange}
             handleSave={() => state.handleSave()}
+            attachmentLinks={attachmentLinks}
           />
 
           <ProcedureAttachments

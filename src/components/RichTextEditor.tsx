@@ -4,7 +4,9 @@ import { useEditor, EditorContent, Editor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { Underline } from '@tiptap/extension-underline';
 import { Bold, Italic, Underline as UnderlineIcon, List, ListOrdered, Undo, Redo } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { AttachmentLink } from '@/lib/tiptap-link';
+import { findRefForAttachmentUrl } from '@/lib/attachment-links';
 
 interface RichTextEditorProps {
   value: string;
@@ -13,6 +15,27 @@ interface RichTextEditorProps {
   onFocus?: () => void;
   onBlur?: () => void;
   placeholder?: string;
+  attachmentLinks?: Record<string, string>;
+}
+
+function resolvePastedAttachment(
+  text: string,
+  attachmentLinks: Record<string, string>,
+): { label: string; href: string } | null {
+  const trimmed = text.trim();
+  if (!trimmed) return null;
+
+  const hrefFromRef = attachmentLinks[trimmed];
+  if (hrefFromRef) {
+    return { label: trimmed, href: hrefFromRef };
+  }
+
+  const refFromUrl = findRefForAttachmentUrl(trimmed, attachmentLinks);
+  if (refFromUrl) {
+    return { label: refFromUrl, href: attachmentLinks[refFromUrl] };
+  }
+
+  return null;
 }
 
 const MenuButton = ({
@@ -112,11 +135,16 @@ function useRichTextEditorSetup({
   readOnly = false,
   onFocus,
   onBlur,
+  attachmentLinks = {},
 }: RichTextEditorProps) {
+  const attachmentLinksRef = useRef(attachmentLinks);
+  attachmentLinksRef.current = attachmentLinks;
+
   const editor = useEditor({
     extensions: [
       StarterKit,
       Underline,
+      AttachmentLink,
     ],
     content: value,
     editable: !readOnly,
@@ -126,6 +154,59 @@ function useRichTextEditorSetup({
     },
     onFocus,
     onBlur,
+    editorProps: {
+      handleClick: (_view, _pos, event) => {
+        const target = event.target as HTMLElement | null;
+        const anchor = target?.closest('a[href]');
+        if (anchor instanceof HTMLAnchorElement) {
+          event.preventDefault();
+          window.open(anchor.href, '_blank', 'noopener,noreferrer');
+          return true;
+        }
+        return false;
+      },
+      handlePaste: (view, event) => {
+        const links = attachmentLinksRef.current;
+        if (!links || Object.keys(links).length === 0) return false;
+
+        const html = event.clipboardData?.getData('text/html') ?? '';
+        const text = event.clipboardData?.getData('text/plain') ?? '';
+
+        if (html.includes('<a ') && html.includes('href=')) {
+          const doc = new DOMParser().parseFromString(html, 'text/html');
+          const anchor = doc.querySelector('a[href]');
+          const href = anchor?.getAttribute('href') ?? '';
+          const refFromUrl = findRefForAttachmentUrl(href, links);
+          if (refFromUrl) {
+            event.preventDefault();
+            const { state } = view;
+            const linkMark = state.schema.marks.link.create({
+              href: links[refFromUrl],
+              target: '_blank',
+              rel: 'noopener noreferrer nofollow',
+            });
+            const node = state.schema.text(refFromUrl, [linkMark]);
+            view.dispatch(state.tr.replaceSelectionWith(node, false));
+            return true;
+          }
+          return false;
+        }
+
+        const resolved = resolvePastedAttachment(text, links);
+        if (!resolved) return false;
+
+        event.preventDefault();
+        const { state } = view;
+        const linkMark = state.schema.marks.link.create({
+          href: resolved.href,
+          target: '_blank',
+          rel: 'noopener noreferrer nofollow',
+        });
+        const node = state.schema.text(resolved.label, [linkMark]);
+        view.dispatch(state.tr.replaceSelectionWith(node, false));
+        return true;
+      },
+    },
   });
 
   // Sync content if it changes externally (important for the Sync Guard)
@@ -187,6 +268,14 @@ export default function RichTextEditor(props: RichTextEditorProps) {
           padding-left: 1rem;
           margin-bottom: 1rem;
           color: #64748b;
+        }
+        .tiptap a {
+          color: #2563eb;
+          text-decoration: underline;
+          cursor: pointer;
+        }
+        .tiptap a:hover {
+          color: #1d4ed8;
         }
       `}</style>
     </div>
