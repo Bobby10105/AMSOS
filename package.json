@@ -24,7 +24,7 @@
     "@tiptap/starter-kit": "3.22.5",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.9.0",
-    "brace-expansion": "5.0.8",
+    "brace-expansion": "5.0.9",
     "date-fns": "^4.1.0",
     "defu": "6.1.7",
     "docx": "^9.6.1",
@@ -69,7 +69,7 @@
     "@playwright/test": "^1.45.0",
     "@types/supertest": "^6.0.2",
     "supertest": "^7.0.0",
-    "postcss": "8.5.18",
+    "postcss": "8.5.23",
     "prisma": "7.8.0",
     "tailwindcss": "^4",
     "tsx": "^4.22.4",
@@ -80,20 +80,31 @@
   "prisma": {
     "seed": "node prisma/seed.mjs"
   },
+
   "overrides": {
-    "postcss": "8.5.18",
+    "postcss": "8.5.23",
     "@hono/node-server": "2.0.10",
-    "hono": "4.12.26",
+    "hono": "4.12.34",
     "@babel/core": "7.29.7",
-    "js-yaml": "4.2.0",
-    "tar": "7.5.16"
+    "js-yaml": "4.3.0",
+    "tar": "7.5.21",
+    "fast-uri": "3.1.5",
+    "sharp": "0.35.0",
+    "valibot": "1.4.2",
+    "brace-expansion": "5.0.9",
+    "undici": "7.29.0"
   },
   "resolutions": {
-    "postcss": "8.5.18",
+    "postcss": "8.5.23",
     "@hono/node-server": "2.0.10",
-    "hono": "4.12.26",
+    "hono": "4.12.34",
     "@babel/core": "7.29.7",
-    "js-yaml": "4.2.0",
-    "tar": "7.5.16"
+    "js-yaml": "4.3.0",
+    "tar": "7.5.21",
+    "fast-uri": "3.1.5",
+    "sharp": "0.35.0",
+    "valibot": "1.4.2",
+    "brace-expansion": "5.0.9",
+    "undici": "7.29.0"
   }
 }

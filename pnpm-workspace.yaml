@@ -8,3 +8,16 @@ allowBuilds:
   sharp: true
   sqlite3: true
   unrs-resolver: true
+
+overrides:
+  js-yaml: "4.3.0"
+  tar: "7.5.21"
+  hono: "4.12.34"
+  fast-uri: "3.1.5"
+  sharp: "0.35.0"
+  valibot: "1.4.2"
+  brace-expansion: "5.0.9"
+  postcss: "8.5.23"
+  undici: "7.29.0"
+  "node-gyp>undici": "6.28.0"
+  "@hono/node-server": "2.0.10"
