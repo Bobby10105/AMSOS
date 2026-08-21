@@ -266,14 +266,14 @@ describe('Audit Detail API Route', () => {
       const mockMessagesProc1 = [{ id: 'msg-1', procedureId: 'proc-1', text: 'Hello' }];
       const mockMessagesProc2: never[] = [];
 
-      queryRawUnsafeMock.mockImplementation(async (query: unknown) => {
+      queryRawUnsafeMock.mockImplementation((async (query: unknown) => {
         const q = Array.isArray(query) ? query.join('') : String(query);
         if (q.includes('FROM ProcedureGroup')) return mockGroups;
         if (q.includes('FROM ProcedureMessage')) return [...mockMessagesProc1, ...mockMessagesProc2];
         if (q.includes('FROM Attachment')) return [...mockAttachmentsProc1, ...mockAttachmentsProc2];
         if (q.includes('FROM Procedure')) return mockProcedures;
         return [];
-      });
+      }) as never);
 
       const response = await GET(mockReq, mockProps);
       const data = await response.json();

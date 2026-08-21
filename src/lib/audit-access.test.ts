@@ -99,46 +99,41 @@ describe('audit-access', () => {
     });
 
     it('should return false if attachment has no procedure', async () => {
-      // @ts-expect-error: mock procedure relationship is incomplete
       vi.mocked(prisma.attachment.findUnique).mockResolvedValue({
         id: 'attachment1',
         procedure: null,
-      });
+      } as never);
       const user: SessionUserLike = { id: 'user1', role: 'Staff' };
       const result = await canAccessAttachment(user, 'attachment1');
       expect(result).toBe(false);
     });
 
     it('should return false if procedure has no auditId', async () => {
-      // @ts-expect-error: mock procedure relationship is incomplete
       vi.mocked(prisma.attachment.findUnique).mockResolvedValue({
         id: 'attachment1',
         procedure: { auditId: null },
-      });
+      } as never);
       const user: SessionUserLike = { id: 'user1', role: 'Staff' };
       const result = await canAccessAttachment(user, 'attachment1');
       expect(result).toBe(false);
     });
 
     it('should return true if user has global audit access', async () => {
-      // @ts-expect-error: mock procedure relationship is incomplete
       vi.mocked(prisma.attachment.findUnique).mockResolvedValue({
         id: 'attachment1',
         procedure: { auditId: 'audit1' },
-      });
+      } as never);
       const user: SessionUserLike = { id: 'user1', role: 'Business Operations' };
       const result = await canAccessAttachment(user, 'attachment1');
       expect(result).toBe(true);
     });
 
     it('should return true if user is a team member for the audit', async () => {
-      // @ts-expect-error: mock procedure relationship is incomplete
       vi.mocked(prisma.attachment.findUnique).mockResolvedValue({
         id: 'attachment1',
         procedure: { auditId: 'audit1' },
-      });
-      // @ts-expect-error: mock teamMember shape is incomplete
-      vi.mocked(prisma.teamMember.findFirst).mockResolvedValue({ id: 'membership1' });
+      } as never);
+      vi.mocked(prisma.teamMember.findFirst).mockResolvedValue({ id: 'membership1' } as never);
       const user: SessionUserLike = { id: 'user1', role: 'Staff' };
       const result = await canAccessAttachment(user, 'attachment1');
       expect(result).toBe(true);
@@ -152,11 +147,10 @@ describe('audit-access', () => {
     });
 
     it('should return false if user is not a team member and has no global access', async () => {
-      // @ts-expect-error: mock procedure relationship is incomplete
       vi.mocked(prisma.attachment.findUnique).mockResolvedValue({
         id: 'attachment1',
         procedure: { auditId: 'audit1' },
-      });
+      } as never);
       vi.mocked(prisma.teamMember.findFirst).mockResolvedValue(null);
       const user: SessionUserLike = { id: 'user1', role: 'Staff' };
       const result = await canAccessAttachment(user, 'attachment1');

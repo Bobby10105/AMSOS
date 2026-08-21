@@ -49,7 +49,7 @@ describe('login', () => {
   });
 
   it('should set secure to true when environment is production and base URL is https', async () => {
-    process.env.NODE_ENV = 'production';
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
     process.env.NEXT_PUBLIC_BASE_URL = 'https://example.com';
 
     await login(testUser);
@@ -64,7 +64,7 @@ describe('login', () => {
   });
 
   it('should set secure to false in non-production environments', async () => {
-    process.env.NODE_ENV = 'development';
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'development';
     process.env.NEXT_PUBLIC_BASE_URL = 'https://example.com';
 
     await login(testUser);
@@ -79,7 +79,7 @@ describe('login', () => {
   });
 
   it('should set secure to false when base URL is not https, even in production', async () => {
-    process.env.NODE_ENV = 'production';
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
     process.env.NEXT_PUBLIC_BASE_URL = 'http://example.com';
 
     await login(testUser);
@@ -94,7 +94,7 @@ describe('login', () => {
   });
 
   it('should set secure to false when base URL is missing, even in production', async () => {
-    process.env.NODE_ENV = 'production';
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
     delete process.env.NEXT_PUBLIC_BASE_URL;
 
     await login(testUser);
@@ -192,7 +192,7 @@ describe('Auth - logout', () => {
   });
 
   it('should not set secure flag when not in production', async () => {
-    process.env.NODE_ENV = 'development';
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'development';
     process.env.NEXT_PUBLIC_BASE_URL = 'http://localhost:3000';
 
     await logout();
@@ -203,7 +203,7 @@ describe('Auth - logout', () => {
   });
 
   it('should not set secure flag in production if URL is not https', async () => {
-    process.env.NODE_ENV = 'production';
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
     process.env.NEXT_PUBLIC_BASE_URL = 'http://example.com';
 
     await logout();
@@ -214,7 +214,7 @@ describe('Auth - logout', () => {
   });
 
   it('should set secure flag in production with https URL', async () => {
-    process.env.NODE_ENV = 'production';
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
     process.env.NEXT_PUBLIC_BASE_URL = 'https://example.com';
 
     await logout();
@@ -225,7 +225,7 @@ describe('Auth - logout', () => {
   });
 
   it('should handle undefined NEXT_PUBLIC_BASE_URL gracefully in production', async () => {
-    process.env.NODE_ENV = 'production';
+    (process.env as Record<string, string | undefined>).NODE_ENV = 'production';
     delete process.env.NEXT_PUBLIC_BASE_URL;
 
     await logout();
@@ -311,7 +311,7 @@ describe('Auth - getSession', () => {
   });
 
   it('should return the session user data when the session is valid', async () => {
-    const validSession = await encrypt(mockUser); // encrypt accepts payload
+    const validSession = await encrypt({ user: mockUser }); // encrypt accepts payload
 
     (cookies as ReturnType<typeof vi.fn>).mockResolvedValue({
       get: vi.fn().mockReturnValue({ value: validSession }),
@@ -320,7 +320,7 @@ describe('Auth - getSession', () => {
     const session = await getSession();
 
     expect(session).not.toBeNull();
-    expect(session?.userId).toEqual(mockUser.userId); // getSession decrypts to payload
+    expect(session?.user.id).toEqual(mockUser.id);
   });
 
   describe('Auth - updateSession', () => {

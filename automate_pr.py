@@ -10,7 +10,9 @@ AUTHOR_ALLOWLIST = {
     "Bobby10105",
     "dependabot[bot]",
     "app/dependabot",
-    "google-labs-jules"
+    "google-labs-jules",
+    "google-labs-jules[bot]",
+    "app/google-labs-jules"
 }
 
 OWNER = "Bobby10105"
@@ -19,12 +21,14 @@ REPO = "OpenWorkpaper"
 # Sourced token fallback
 DEFAULT_TOKEN = os.getenv("GITHUB_TOKEN", "")
 
-def get_headers(token):
-    return {
-        "Authorization": f"token {token}",
+def get_headers(token=None):
+    headers = {
         "Accept": "application/vnd.github+json",
         "User-Agent": "Antigravity-PR-Gatekeeper"
     }
+    if token:
+        headers["Authorization"] = f"token {token}"
+    return headers
 
 def make_request(url, method="GET", data=None, token=None):
     headers = get_headers(token)
@@ -150,8 +154,7 @@ def delete_branch(branch_name, token):
 def main():
     token = os.environ.get("GITHUB_TOKEN", DEFAULT_TOKEN)
     if not token:
-        print("Error: No GitHub token provided in GITHUB_TOKEN environment variable.", file=sys.stderr)
-        sys.exit(1)
+        print("Note: GITHUB_TOKEN environment variable not set. Running in read-only / unauthenticated mode.")
         
     print("Fetching open Pull Requests...")
     pulls_url = f"https://api.github.com/repos/{OWNER}/{REPO}/pulls?state=open"

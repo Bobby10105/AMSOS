@@ -41,8 +41,8 @@ describe('PATCH /api/users/[id]', () => {
 
   it('should return 403 if user is not an IT Administrator', async () => {
     vi.mocked(getSession).mockResolvedValue({
-      user: { id: '456', role: 'Auditor', username: 'auditor' },
-    } as { user: { id: string, role: string, username: string } });
+      user: { id: '456', role: 'Auditor', username: 'auditor', mustChangePassword: false },
+    });
 
     const req = new NextRequest('http://localhost/api/users/123', {
       method: 'PATCH',
@@ -58,15 +58,19 @@ describe('PATCH /api/users/[id]', () => {
 
   it('should successfully update user role if user is an IT Administrator', async () => {
     vi.mocked(getSession).mockResolvedValue({
-      user: { id: 'admin123', role: 'IT Administrator', username: 'admin' },
-    } as { user: { id: string, role: string, username: string } });
+      user: { id: 'admin123', role: 'IT Administrator', username: 'admin', mustChangePassword: false },
+    });
 
     const updatedUser = {
       id: mockUserId,
       username: 'testuser',
       role: 'Auditor',
       mustChangePassword: false,
-      createdAt: new Date().toISOString(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      password: null,
+      ssoProvider: null,
+      ssoId: null,
     };
     vi.mocked(prisma.user.update).mockResolvedValue(updatedUser);
 
@@ -97,8 +101,8 @@ describe('PATCH /api/users/[id]', () => {
 
   it('should return 500 if prisma update fails', async () => {
     vi.mocked(getSession).mockResolvedValue({
-      user: { id: 'admin123', role: 'IT Administrator', username: 'admin' },
-    } as { user: { id: string, role: string, username: string } });
+      user: { id: 'admin123', role: 'IT Administrator', username: 'admin', mustChangePassword: false },
+    });
 
     vi.mocked(prisma.user.update).mockRejectedValue(new Error('Database error'));
 

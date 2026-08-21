@@ -212,14 +212,12 @@ describe('GET /api/attachments/[id]', () => {
       mimetype: 'application/pdf',
       size: 1000,
       createdAt: new Date(),
-      updatedAt: new Date(),
-      status: 'DRAFT',
-      category: 'EVIDENCE',
+      displayOrder: null,
       preparedBy: null,
       preparedDate: null,
       reviewedBy: null,
       reviewedDate: null,
-    });
+    } as never);
 
     const res = await GET(req, { params });
 
@@ -239,9 +237,7 @@ describe('GET /api/attachments/[id]', () => {
       mimetype: 'application/pdf',
       size: 1000,
       createdAt: new Date(),
-      updatedAt: new Date(),
-      status: 'DRAFT',
-      category: 'EVIDENCE',
+      displayOrder: null,
       preparedBy: null,
       preparedDate: null,
       reviewedBy: null,
@@ -274,9 +270,7 @@ describe('GET /api/attachments/[id]', () => {
       mimetype: 'application/pdf',
       size: 1000,
       createdAt: new Date(),
-      updatedAt: new Date(),
-      status: 'DRAFT',
-      category: 'EVIDENCE',
+      displayOrder: null,
       preparedBy: null,
       preparedDate: null,
       reviewedBy: null,

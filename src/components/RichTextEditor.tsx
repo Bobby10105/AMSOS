@@ -138,7 +138,9 @@ function useRichTextEditorSetup({
   attachmentLinks = {},
 }: RichTextEditorProps) {
   const attachmentLinksRef = useRef(attachmentLinks);
-  attachmentLinksRef.current = attachmentLinks;
+  useEffect(() => {
+    attachmentLinksRef.current = attachmentLinks;
+  }, [attachmentLinks]);
 
   const editor = useEditor({
     extensions: [
