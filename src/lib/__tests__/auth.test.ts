@@ -141,7 +141,7 @@ describe('Auth - JWT encryption and decryption', () => {
     expect(parts.length).toBe(3);
 
     const sig = parts[2];
-    const tamperedSig = sig.slice(0, -1) + (sig.endsWith('A') ? 'B' : 'A');
+    const tamperedSig = (sig[0] === 'A' ? 'B' : 'A') + sig.slice(1);
     const tamperedToken = `${parts[0]}.${parts[1]}.${tamperedSig}`;
 
     await expect(decrypt(tamperedToken)).rejects.toThrowError(
